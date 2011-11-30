@@ -45,7 +45,7 @@ class Brow::Proxy
   end
 
   def stop
-    `nginx -c #{NGINX_CONFIG_FILE_LOCATION} -s quit`
+    `sudo nginx -c #{NGINX_CONFIG_FILE_LOCATION} -s quit`
   end
 
   def running?
