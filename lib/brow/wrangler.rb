@@ -55,18 +55,20 @@ class Brow::Wrangler
       puts "#{service_name} who?"
       return
     end
+
     begin
       @services.restart(service_name)
     rescue Timeout::Error
       puts "Sorry. Failed to kill #{service_name}"
     end
+    
+    assert_all_services_running
   end
 
   def assert_all_services_running
     missing = @services.service_names - @services.running
     unless missing.empty?
-      puts "Unicorns #{missing.join(', ')} failed to launch. Aborting."
-      down
+      puts "Warning: #{missing.join(', ')} has failed to launch." 
       exit 1
     end
   end

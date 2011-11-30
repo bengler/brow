@@ -3,7 +3,7 @@
 require 'rubygems'
 require 'thor'
 require 'bundler'
-Bundler.require
+require 'brow'
 
 module Powder
   class CLI < Thor
