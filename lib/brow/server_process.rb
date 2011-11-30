@@ -36,7 +36,7 @@ class Brow::ServerProcess
       cd #{pwd}
       BUNDLE_GEMFILE=#{pwd}/Gemfile bundle exec unicorn -D -l #{socket} config.ru
     `
-    puts result
+    puts result unless result.empty?
     socket
   end
 
