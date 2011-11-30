@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Simen Svale Skogsrud"]
   s.email       = ["simen@bengler.no"]
   s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = %q{Brow is not Pow}
+  s.description = %q{An autoconfigurator that works almost like Pow but uses unicorns and nginx}
 
   s.rubyforge_project = "brow"
 

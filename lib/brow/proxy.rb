@@ -30,13 +30,13 @@ class Brow::Proxy
 
   def valid_config?
     write_config('/tmp/brow-nginx-preflight.conf')
-    @last_validation_output = `nginx -t -c /tmp/brow-nginx-preflight.conf 2>&1`
+    @last_validation_output = `sudo nginx -t -c /tmp/brow-nginx-preflight.conf 2>&1`
     !!(@last_validation_output =~ /test is successful\n/)
   end
 
   def start
     write_config(NGINX_CONFIG_FILE_LOCATION)
-    `nginx -c #{NGINX_CONFIG_FILE_LOCATION} 2>&1`
+    `sudo nginx -c #{NGINX_CONFIG_FILE_LOCATION} 2>&1`
   end
 
   def reload

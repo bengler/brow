@@ -19,17 +19,26 @@ takes care of mapping all your pebbles into the url-space of all your apps.
 
 Check that everytning installed correctly by listing configured services
 
-    brow list
+    brow status
 
 Now you have a .brow folder in your home directory which you can use to mount your rack services. Symlink your
 pebbles in .brow/pebbles and your applications in .brow/apps. Then do:
 
-    sudo brow up
+    brow up
 
 To launch everyting. This will launch a unicorn server for every app and pebble and configure the apps to
 run with all pebbles proxied in via nginx. Each app will be availible like this:
 
     http://yourapp.dev
 
+To restart a single pebble or app, do this:
 
+    brow restart checkpoint
 
+To restart everything do
+
+    brow restart
+
+To kill all:
+
+    brow down
