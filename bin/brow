@@ -2,6 +2,8 @@
 
 require 'rubygems'
 require 'thor'
+require 'bundler'
+Bundler.require
 
 module Powder
   class CLI < Thor
