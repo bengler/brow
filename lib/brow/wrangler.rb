@@ -46,7 +46,7 @@ class Brow::Wrangler
 
   def down
     puts "Killing nginx"
-    @proxy.stop
+    @proxy.stop if @proxy.running?
     puts "Killing all unicorns ..."
     @services.kill_all
   end
