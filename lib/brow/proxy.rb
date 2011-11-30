@@ -1,9 +1,13 @@
+# Handles configuring and starting/stopping nginx
+
 class Brow::Proxy
+  attr_reader :last_validation_output
+
+  NGINX_CONFIG_FILE_LOCATION = '/tmp/brow-nginx-dummy.conf'
+
   def initialize(services)
-    begin
-      `nginx -v`
-    rescue Errno::ENOENT
-      puts "Brow requires Nginx"
+    unless `nginx -v 2>&1` =~ /^nginx\:/
+      puts "Please install nginx"
       exit 1
     end
     @services = services
@@ -20,13 +24,32 @@ class Brow::Proxy
     nginx_config.config
   end
 
-  def validate_config
-    File.open('/tmp/nginx-dummy.conf', 'w') {|f| f.write(config) }
-    `nginx -t -c /tmp/nginx-dummy.conf 2>&1`
+  def write_config(filename)
+    File.open(filename, 'w') {|f| f.write(config) }
   end
 
   def valid_config?
-    !!(validate_config =~ /test is successful\n/)
+    write_config('/tmp/brow-nginx-preflight.conf')
+    @last_validation_output = `nginx -t -c /tmp/brow-nginx-preflight.conf 2>&1`
+    !!(@last_validation_output =~ /test is successful\n/)
+  end
+
+  def start
+    write_config(NGINX_CONFIG_FILE_LOCATION)
+    `nginx -c #{NGINX_CONFIG_FILE_LOCATION} 2>&1`
+  end
+
+  def reload
+    write_config(NGINX_CONFIG_FILE_LOCATION)
+    `nginx -c #{NGINX_CONFIG_FILE_LOCATION} -s reload`
+  end
+
+  def stop
+    `nginx -c #{NGINX_CONFIG_FILE_LOCATION} -s quit`
+  end
+
+  def running?
+    `ps -ax | grep nginx`.scan(NGINX_CONFIG_FILE_LOCATION).size > 0
   end
 
 end

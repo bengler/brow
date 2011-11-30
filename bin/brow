@@ -1,0 +1,69 @@
+#!/usr/bin/ruby
+
+require 'rubygems'
+require 'thor'
+require 'bundler'
+Bundler.require
+
+module Powder
+  class CLI < Thor
+    include Thor::Actions
+    default_task :help    
+
+    map '-r' => 'restart'
+    map 'status' => 'list'
+
+    desc "up", "Launch services"
+    def up
+      wrangler.up
+    end
+
+    desc "down", "Kill services"
+    def down
+      wrangler.down
+    end
+
+    desc "restart [service]", "Restart a service"
+    def restart(name=nil)
+      if name
+        wrangler.restart(name)
+      else
+        wrangler.down
+        wrangler.up
+      end
+    end
+
+    desc "list", "Show status for all configured services"
+    def list
+      running = wrangler.services.running 
+      say "Apps:"
+      wrangler.services.app_names.each do |name|
+        say " - #{name} #{running.include?(name) ? '(up)' : '(down)'}"
+      end
+      say "Pebbles:"
+      wrangler.services.pebble_names.each do |name|
+        say " - #{name} #{running.include?(name) ? '(up)' : '(down)'}"
+      end
+      say "Nginx #{wrangler.proxy.running? ? '(up)' : '(down)'}"
+    end
+
+    desc "cleanup", "Clean up invalid symbolic link"
+    def cleanup
+      Dir[Brow::Wrangler.ROOT_PATH + "/*"].map { |symlink|
+        FileUtils.rm(symlink) unless File.exists? File.readlink(symlink)
+      }
+    end
+
+    private
+
+    def wrangler
+      unless @wrangler
+        @wrangler = Brow::Wrangler.new
+        @wrangler.ensure_brow_folders
+      end
+      @wrangler
+    end
+
+  end
+end
+Powder::CLI.start

@@ -1,4 +1,6 @@
-class Brow::Server
+# Enumerating, killing and launching individual web servers
+
+class Brow::ServerProcess
   attr_reader :pid, :pwd, :name
 
   def initialize(pid)

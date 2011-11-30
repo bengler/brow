@@ -1,3 +1,5 @@
+# Writes the nginx config files
+
 class Brow::NginxConfig
 
   def initialize
@@ -15,6 +17,20 @@ class Brow::NginxConfig
     raise "Must specify socket" unless config[:socket]
     puts "Warning: No pwd supplied for app #{name}" unless config[:pwd]
     @apps[name] = config
+  end
+
+  def preamble    
+    """
+    worker_processes 4;
+    pid /tmp/brow-nginx.pid;
+    working_directory /tmp;
+    error_log /tmp/brow-nginx-error.log crit;
+
+    events {
+      worker_connections 1024;
+    }
+
+    """
   end
 
   def config
@@ -44,19 +60,6 @@ class Brow::NginxConfig
     """
   end
 
-  def preamble    
-    """
-    worker_processes 4;
-    pid /tmp/brow-nginx.pid;
-    error_log /tmp/brow-nginx-error.log crit;
-
-    events {
-      worker_connections 1024;
-    }
-
-    """
-  end
-
   def upstream
     @pebbles.merge(@apps).map do |name, options|
       """
@@ -78,7 +81,7 @@ class Brow::NginxConfig
   def server(name)    
     socket = @apps[name]
     result = """
-      listen 8080;
+      listen 80;
       server_name #{name}.dev;
     """
     

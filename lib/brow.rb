@@ -1,9 +1,7 @@
 require "brow/version"
-require "brow/server"
+require "brow/server_process"
 require "brow/services"
 require "brow/proxy"
 require "brow/nginxconfig"
-
-module Brow
-  # Your code goes here...
-end
+require "brow/wrangler"
+require "brow/hostsfile"

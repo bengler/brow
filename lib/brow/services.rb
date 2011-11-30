@@ -1,3 +1,7 @@
+# Discover configuration and manage web servers
+
+require 'timeout'
+
 class Brow::Services
   attr_reader :root, :servers
 
@@ -5,7 +9,7 @@ class Brow::Services
 
   def initialize(root = nil)
     @root = (root || `echo ~/.brow`).chomp("\n")    
-    @servers = Brow::Server.find_all
+    @servers = Brow::ServerProcess.find_all
   end
 
   def pebble_dirs
@@ -53,17 +57,32 @@ class Brow::Services
   end
 
   def running
-    Brow::Server.find_all.map do |server|
+    Brow::ServerProcess.find_all.map do |server|
       server.name
     end.uniq & service_names
   end
 
-  def kill(name)
-    Brow::Server.kill(name)
+  def running?(name)
+    running.include?(name)
   end
 
   def launch(name)
-    Brow::Server.launch(pwd_for(name), socket_name(name))
+    puts "  + #{name}"
+    Brow::ServerProcess.launch(pwd_for(name), socket_for(name))
+  end
+
+  def kill(name)
+    puts "  - #{name}"
+    Brow::ServerProcess.kill(name)
+  end
+
+  def restart(name)
+    kill(name)
+    Timeout::timeout(5) do
+      sleep 1 while running?(name)
+    end
+    launch(name)
+    true
   end
 
   def pwd_for(name)
