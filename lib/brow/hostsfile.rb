@@ -1,3 +1,5 @@
+# Adds localhost-mappings to /etc/hosts
+
 module Brow::HostsFile
   def self.update(service_names, domain = 'dev')
     service_lines = service_names.map do |name|

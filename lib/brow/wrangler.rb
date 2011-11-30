@@ -29,7 +29,8 @@ class Brow::Wrangler
       end
       @proxy.start 
     else
-      puts "Nginx allready running"
+      puts "Nginx allready running, reloading config."
+      @proxy.reload
     end
 
     puts "Updating /etc/hosts"
@@ -61,7 +62,7 @@ class Brow::Wrangler
     rescue Timeout::Error
       puts "Sorry. Failed to kill #{service_name}"
     end
-    
+
     assert_all_services_running
   end
 

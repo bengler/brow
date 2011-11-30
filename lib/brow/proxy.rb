@@ -41,7 +41,7 @@ class Brow::Proxy
 
   def reload
     write_config(NGINX_CONFIG_FILE_LOCATION)
-    `nginx -c #{NGINX_CONFIG_FILE_LOCATION} -s reload`
+    `sudo nginx -c #{NGINX_CONFIG_FILE_LOCATION} -s reload`
   end
 
   def stop
