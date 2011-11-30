@@ -1,4 +1,4 @@
-# Launching or killing the entire Brow configuration
+# Practically the command line tool as a class
 
 class Brow::Wrangler
   attr_reader :services, :proxy

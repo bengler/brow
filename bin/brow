@@ -5,7 +5,7 @@ require 'thor'
 require 'bundler'
 require 'brow'
 
-module Powder
+module Brow
   class CLI < Thor
     include Thor::Actions
     default_task :help    
@@ -66,4 +66,4 @@ module Powder
 
   end
 end
-Powder::CLI.start
+Brow::CLI.start
