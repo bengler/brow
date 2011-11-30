@@ -42,3 +42,8 @@ To restart everything do
 To kill all:
 
     brow down
+
+## Pebbles?!
+
+This is not the time nor place to describe the details of the pebbles spec, suffice it to say that each service
+added to the pebbles folder is proxied into the url space of every app at /api/[service-name]
