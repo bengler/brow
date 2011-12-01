@@ -43,6 +43,10 @@ To kill all:
 
     brow down
 
+To execute a command in all repos, do:
+
+    brow exec bundle install
+
 ## Pebbles?!
 
 This is not the time nor place to describe the details of the pebbles spec, suffice it to say that each service

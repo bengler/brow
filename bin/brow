@@ -60,7 +60,7 @@ module Brow
       command = command.join(' ')
       wrangler.services.service_dirs.each do |dir|
         puts "#{dir}$ #{command}"
-        Brow::ShellEnvironment.exec("#{command} 1>&2")
+        Brow::ShellEnvironment.exec("#{command} 1>&2", dir)
         puts
       end
     end
