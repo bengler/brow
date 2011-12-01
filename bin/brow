@@ -64,6 +64,11 @@ module Brow
       end
     end
 
+    desc "watch", "Watch all mounted apps for changes and reloading on demand"
+    def watch
+      Brow::Watcher.new(Brow::Services.new)
+    end
+
     private
 
     def wrangler
