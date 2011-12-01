@@ -66,7 +66,7 @@ module Brow
 
     desc "watch", "Watch all mounted apps for changes and reloading on demand"
     def watch
-      Brow::Watcher.new(Brow::Services.new)
+      Brow::Watcher.new(Brow::Services.new).start
     end
 
     private

@@ -10,8 +10,10 @@ class Brow::Watcher
     @restart_queue = Queue.new
   end
 
-  def start    
-    @services.service_names.each { |service| watch(service) }
+  def start(service_names = nil)
+    service_names ||= @services.service_names
+    service_names.each { |service| watch(service) }
+    puts "Watching #{service_names.join(', ')}"
     while true
       service = @restart_queue.pop
       @services.restart(service)
@@ -19,7 +21,6 @@ class Brow::Watcher
   end 
 
   def watch(service_name)
-    puts "Watching #{service_name}"
     listener = Guard::Listener.select_and_init(@services.pwd_for(service_name))
     last_change_event = nil
     listener.on_change do |file|
@@ -32,7 +33,6 @@ class Brow::Watcher
         sleep 1 until Time.now-last_change_event > 5
         last_change_event = nil       
         @restart_queue << service_name
-        puts @restart_queue.inspect
       end
     end
     Thread.new do
