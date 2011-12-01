@@ -76,8 +76,7 @@ class Brow::Wrangler
 
   def assert_nginx_running
     unless @proxy.running?
-      puts "Nginx is not running. Packing up."
-      down
+      puts "Warning: Nginx is not running"
       exit 1
     end
   end
