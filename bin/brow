@@ -54,13 +54,15 @@ module Brow
       }
     end
 
-    desc "exec [command]", "Execute a shell command in all mounted apps and pebbles"
-    def exec(command = nil)
+    desc "exec COMMAND", "Execute a shell command in all mounted apps and pebbles"
+    method_options :command => :array
+    def exec(*command)
+      command = command.join(' ')
       wrangler.services.service_dirs.each do |dir|
         puts "#{dir}$ #{command}"
         puts `
         cd #{dir}
-        #{command}
+        #{command} 1>&2
         `
         puts
       end
