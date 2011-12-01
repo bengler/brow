@@ -14,9 +14,13 @@ class Brow::Watcher
     service_names ||= @services.service_names
     service_names.each { |service| watch(service) }
     puts "Watching #{service_names.join(', ')}"
-    while true
-      service = @restart_queue.pop
-      @services.restart(service)
+    begin
+      while true
+        service = @restart_queue.pop
+        @services.restart(service)
+      end
+    rescue Interrupt
+      puts "Signing off"
     end
   end 
 
