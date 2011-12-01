@@ -30,7 +30,7 @@ class Brow::Watcher
     Thread.new do
       while true
         sleep 1 until !last_change_event.nil?
-        sleep 1 until Time.now-last_change_event > 5
+        sleep 1 until Time.now-last_change_event > 2
         last_change_event = nil       
         @restart_queue << service_name
       end

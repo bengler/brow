@@ -10,7 +10,7 @@ class Brow::ServerProcess
   end
 
   def kill
-    `kill -8 #{@pid}`
+    `kill -s QUIT #{@pid}`
   end
 
   def self.find_all
@@ -34,9 +34,22 @@ class Brow::ServerProcess
     end
   end
 
+  def self.old_unicorns
+    `ps -ax | grep 'unicorn master (old)'`.split("\n").map{|line| line.scan(/^(\d+).*\d\:\d\d\.\d\d unicorn/)}.flatten
+  end
+
+  def self.kill_old_unicorns
+    old_unicorns.map do |pid|
+      `kill -s QUIT #{pid}`
+    end.size
+  end
+
   def self.graceful_restart(name)
     if proc = find_by_name(name)
-      return `kill -1 #{proc.pid}`
+      `kill -s HUP #{proc.pid}`
+      sleep 0.5 until old_unicorns.size > 0
+      sleep 0.5 until kill_old_unicorns == 0
+      return true
     end
     false
   end
