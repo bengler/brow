@@ -2,7 +2,6 @@
 
 require 'rubygems'
 require 'thor'
-require 'bundler'
 require 'brow'
 
 module Brow
@@ -52,13 +51,6 @@ module Brow
         say " - #{name} #{running.include?(name) ? '(up)' : '(down)'}"
       end
       say "Nginx #{wrangler.proxy.running? ? '(up)' : '(down)'}"
-    end
-
-    desc "cleanup", "Clean up invalid symbolic link"
-    def cleanup
-      Dir[Brow::Wrangler.ROOT_PATH + "/*"].map { |symlink|
-        FileUtils.rm(symlink) unless File.exists? File.readlink(symlink)
-      }
     end
 
     desc "exec COMMAND", "Execute a shell command in all mounted apps and pebbles"
