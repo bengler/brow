@@ -34,6 +34,7 @@ class Brow::ServerProcess
     socket ||= "brow_app_#{rand(2**128).to_s(36)}"
     result = `
       cd #{pwd}
+      ruby --version
       BUNDLE_GEMFILE=#{pwd}/Gemfile bundle exec unicorn -D -l #{socket} config.ru
     `
     puts result unless result.empty?
