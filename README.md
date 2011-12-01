@@ -47,6 +47,10 @@ To execute a command in all repos, do:
 
     brow exec bundle install
 
+To watch all repositories for changes and automatically reload relevant apps, do:
+
+    brow watch
+
 ## Pebbles?!
 
 This is not the time nor place to describe the details of the pebbles spec, suffice it to say that each service
