@@ -37,7 +37,6 @@ class Brow::Wrangler
     Brow::HostsFile.update(@services.app_names)
     
     puts "Done. Stand by for headcount."
-    sleep 2
     assert_all_services_running
     assert_nginx_running
 
@@ -58,13 +57,18 @@ class Brow::Wrangler
       return
     end
 
+    unless @services.running.include?(service_name)
+      puts "#{service_name} is not running"
+      return
+    end
+
     begin
       @services.restart(service_name, hard)
     rescue Timeout::Error
       puts "Sorry. Failed to kill #{service_name}"
     end
 
-    assert_all_services_running
+    assert_all_services_running([service_name])
   end
 
   def restart_all(hard = false)
@@ -85,9 +89,15 @@ class Brow::Wrangler
     end
   end
 
-  def assert_all_services_running
-    missing = @services.service_names - @services.running
-    unless missing.empty?
+  def assert_all_services_running(service_names = nil)
+    service_names ||= @services.service_names
+    begin
+      Timeout.timeout(10) do
+        sleep 0.5 until (service_names - @services.running).empty?
+      end
+      return true
+    rescue Timeout::Error
+      missing = services - @services.running
       puts "Warning: #{missing.join(', ')} has failed to launch." 
       exit 1
     end
