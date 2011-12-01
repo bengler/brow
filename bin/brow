@@ -12,6 +12,8 @@ module Brow
 
     map '-r' => 'restart'
     map 'status' => 'list'
+    map 'raise' => 'up'
+    map 'frowm' => 'down'
 
     desc "up", "Launch services"
     def up
