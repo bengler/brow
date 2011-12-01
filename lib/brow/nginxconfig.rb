@@ -74,6 +74,8 @@ class Brow::NginxConfig
     """
     location /api/#{pebble_name} {
       proxy_pass http://#{pebble_name};
+      proxy_set_header X-Forwarded-Host $host;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
     """
   end
