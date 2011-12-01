@@ -49,21 +49,40 @@ class Brow::Wrangler
     @proxy.stop if @proxy.running?
     puts "Killing all unicorns ..."
     @services.kill_all
+    assert_all_services_stopped
   end
 
-  def restart(service_name)
+  def restart(service_name, hard = false)
     unless @services.service_names.include?(service_name)
       puts "#{service_name} who?"
       return
     end
 
     begin
-      @services.restart(service_name)
+      @services.restart(service_name, hard)
     rescue Timeout::Error
       puts "Sorry. Failed to kill #{service_name}"
     end
 
     assert_all_services_running
+  end
+
+  def restart_all(hard = false)
+    @services.service_names.each do |name|
+      restart(name, hard)
+    end
+  end
+
+  def assert_all_services_stopped
+    begin
+      Timeout.timeout(10) do
+        sleep 1 until @services.running.empty?
+      end
+      return true
+    rescue Timeout::Error
+      puts "Fatal: #{@services.running.join(', ')} refuse to die"
+      exit 1
+    end
   end
 
   def assert_all_services_running

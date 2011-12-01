@@ -14,10 +14,14 @@ class Brow::ServerProcess
   end
 
   def self.find_all
-    pids = `ps -ax | grep unicorn`.split("\n").map{|line| line.scan(/^(\d+).*\d\:\d\d\.\d\d unicorn/)}.flatten
+    pids = `ps -ax | grep 'unicorn master'`.split("\n").map{|line| line.scan(/^(\d+).*\d\:\d\d\.\d\d unicorn/)}.flatten
     pids.map do |pid|
       self.new(pid)
     end
+  end
+
+  def self.find_by_name(name)
+    find_all.find { |proc| proc.name == name }
   end
 
   def self.kill_all
@@ -28,6 +32,13 @@ class Brow::ServerProcess
     find_all.each do |server|
       server.kill if server.name == name
     end
+  end
+
+  def self.graceful_restart(name)
+    if proc = find_by_name(name)
+      return `kill -1 #{proc.pid}`
+    end
+    false
   end
 
   def self.launch(pwd, socket = nil)

@@ -76,12 +76,17 @@ class Brow::Services
     Brow::ServerProcess.kill(name)
   end
 
-  def restart(name)
-    kill(name)
-    Timeout::timeout(5) do
-      sleep 1 while running?(name)
+  def restart(name, hard = false)
+    unless hard
+      puts "Reloading #{name}"
+      Brow::ServerProcess.graceful_restart(name)
+    else
+      kill(name)
+      Timeout::timeout(5) do
+        sleep 1 while running?(name)
+      end
+      launch(name)
     end
-    launch(name)
     true
   end
 

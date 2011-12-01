@@ -20,18 +20,23 @@ module Brow
       wrangler.up
     end
 
-    desc "down", "Kill services"
+    desc "down", "Shut down services"
     def down
       wrangler.down
     end
 
-    desc "restart [service]", "Restart a service"
-    def restart(name=nil)
+    desc "restart [service] [--hard]", "Restart a single service or toggle the whole enchilada"
+    method_options :hard => :boolean, :alias => :string
+    def restart(name = nil)
       if name
-        wrangler.restart(name)
+        wrangler.restart(name, options['hard'])
       else
-        wrangler.down
-        wrangler.up
+        if options['hard']
+          wrangler.down
+          wrangler.up
+        else
+          wrangler.restart_all
+        end
       end
     end
 
