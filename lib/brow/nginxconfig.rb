@@ -50,6 +50,9 @@ class Brow::NginxConfig
       fastcgi_temp_path /tmp/fastcgi_temp;
       uwsgi_temp_path /tmp/uwsgi_temp;
       scgi_temp_path /tmp/scgi_temp;
+      tcp_nopush on; # off may be better for *some* Comet/long-poll stuff
+      tcp_nodelay off; # on may be better for some Comet/long-poll stuff
+
 
       #{upstream}
 
