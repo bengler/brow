@@ -77,6 +77,10 @@ class Brow::Wrangler
     end
   end
 
+  def watch
+    Brow::Watcher.new(Brow::Services.new).start
+  end
+
   def assert_all_services_stopped
     begin
       Timeout.timeout(10) do

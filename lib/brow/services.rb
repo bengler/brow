@@ -52,8 +52,6 @@ class Brow::Services
     (service_names-running).each do |name|
       launch(name)
     end
-    sleep 1
-    running
   end
 
   def running
