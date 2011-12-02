@@ -15,6 +15,14 @@ class Brow::Watcher
 
   def start(service_names = nil)
     service_names ||= @services.service_names
+
+    rails_services, service_names = service_names.partition do |service|
+      @services.is_rails_app?(service)
+    end
+    unless rails_services.empty?
+      puts "Found rails in Gemfile, not watching: #{rails_services.join(', ')}"
+    end
+
     service_names.each { |service| watch(service) }
     puts "Watching #{service_names.join(', ')}"
     puts "(Install growlnotify (http://growl.info/downloads.php) to be notified of restarts in style.)" unless @growl_enabled
@@ -27,7 +35,7 @@ class Brow::Watcher
     rescue Interrupt
       puts "Signing off"
     end
-  end 
+  end
 
   def watch(service_name)
     listener = Guard::Listener.select_and_init(@services.pwd_for(service_name))
@@ -44,7 +52,7 @@ class Brow::Watcher
       while true
         sleep 1 until !last_change_event.nil?
         sleep 1 until Time.now-last_change_event > 2
-        last_change_event = nil       
+        last_change_event = nil
         @restart_queue << service_name
       end
     end

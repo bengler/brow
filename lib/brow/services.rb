@@ -71,6 +71,15 @@ class Brow::Services
     Brow::ServerProcess.launch(pwd_for(name))
   end
 
+  def is_rails_app?(name)
+    begin
+      gemfile = File.join(pwd_for(name), "Gemfile")
+      return !open(gemfile).grep(/gem\s+(\"|\')rails(\"|\')/).empty?
+    rescue => e
+    end
+    false
+  end
+
   def kill(name)
     puts "  - #{name}"
     Brow::ServerProcess.kill(name)
