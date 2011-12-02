@@ -21,13 +21,13 @@ Check that everytning installed correctly by listing configured services
 
     brow status
 
-Now you have a .brow folder in your home directory which you can use to mount your rack services. Symlink your
-pebbles in .brow/pebbles and your applications in .brow/apps. Then do:
+Now you have a .brow folder in your home directory which you can use to mount your rack services. Symlink all your
+pebbles and apps somewhere inside ~/.brow and then do this to configure and launch everything:
 
     brow up
 
 To launch everyting. This will launch a unicorn server for every app and pebble and configure the apps to
-run with all pebbles proxied in via nginx. Each app will be availible like this:
+run with all pebbles proxied in via nginx. Each app will be available like this:
 
     http://yourapp.dev
 
@@ -39,7 +39,12 @@ To restart everything do
 
     brow restart
 
-To kill all:
+If this fails:
+
+    brow restart --hard 
+    brow restart checkpoint --hard
+
+To kill all services:
 
     brow down
 
@@ -53,5 +58,5 @@ To watch all repositories for changes and automatically reload relevant apps, do
 
 ## Pebbles?!
 
-This is not the time nor place to describe the details of the pebbles spec, suffice it to say that each service
-added to the pebbles folder is proxied into the url space of every app at /api/[service-name]
+This is not the time nor place to describe the details of the pebbles spec, suffice it to say that each pebble is 
+proxied into the url space of every app at /api/[service-name]
