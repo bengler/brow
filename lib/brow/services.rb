@@ -59,7 +59,7 @@ class Brow::Services
   def running
     Brow::ServerProcess.find_all.map do |server|
       server.name
-    end.uniq & service_names
+    end.uniq
   end
 
   def running?(name)
@@ -68,7 +68,7 @@ class Brow::Services
 
   def launch(name)
     puts "  + #{name}"
-    Brow::ServerProcess.launch(pwd_for(name), socket_for(name))
+    Brow::ServerProcess.launch(pwd_for(name))
   end
 
   def kill(name)
@@ -95,10 +95,10 @@ class Brow::Services
   end
 
   def socket_for(name)
-    "/tmp/#{SOCKET_PREFIX}-#{name}.sock"
+    Brow::ServerProcess.socket_for_service(name)
   end
 
   def sockets
-    running.map{|name| socket_name(name)}
+    running.map{|name| socket_for(name)}
   end
 end

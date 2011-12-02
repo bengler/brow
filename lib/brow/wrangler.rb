@@ -97,7 +97,7 @@ class Brow::Wrangler
       end
       return true
     rescue Timeout::Error
-      missing = services - @services.running
+      missing = service_names - @services.running
       puts "Warning: #{missing.join(', ')} has failed to launch." 
       exit 1
     end

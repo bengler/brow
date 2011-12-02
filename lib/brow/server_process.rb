@@ -3,18 +3,25 @@
 class Brow::ServerProcess
   attr_reader :pid, :pwd, :name
 
+  SOCKET_NAME_PREFIX="brow-service-"
+
   def initialize(pid)
     @pid = pid
-    @pwd = `lsof -a -p #{pid} -d cwd -Fn`.split(/\n/).find{|l| l =~ /^n/}[1..-1].chomp("\n")
-    @name = File.basename(@pwd)
+    pwd_line = `lsof -a -p #{pid} -d cwd -Fn`.split(/\n/).find{|l| l =~ /^n/}
+    @pwd = pwd_line[1..-1].chomp("\n") if pwd_line
+    @name = File.basename(@pwd) if @pwd
+  end
+
+  def socket
+    socket_for_service(@name)
   end
 
   def kill
-    `kill -s QUIT #{@pid}`
+    `kill -8 #{@pid}`
   end
 
   def self.find_all
-    pids = `ps -ax | grep 'unicorn master'`.split("\n").map{|line| line.scan(/^(\d+).*\d\:\d\d\.\d\d unicorn/)}.flatten
+    pids = `ps -ax | grep 'unicorn master'`.split("\n").map{|line| line.scan(/^\s*(\d+).*#{SOCKET_NAME_PREFIX}/)}.flatten
     pids.map do |pid|
       self.new(pid)
     end
@@ -54,8 +61,12 @@ class Brow::ServerProcess
     false
   end
 
-  def self.launch(pwd, socket = nil)
-    socket ||= "brow_app_#{rand(2**128).to_s(36)}"
+  def self.socket_for_service(name)
+    "/tmp/#{SOCKET_NAME_PREFIX}#{name}.sock"
+  end
+
+  def self.launch(pwd)
+    socket = socket_for_service(File.basename(pwd))
     result = Brow::ShellEnvironment.exec(
       "BUNDLE_GEMFILE=#{pwd}/Gemfile bundle exec unicorn -D -l #{socket} config.ru", pwd)
     puts result unless result.empty?
