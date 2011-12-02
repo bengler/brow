@@ -5,21 +5,21 @@ class Brow::Proxy
 
   NGINX_CONFIG_FILE_LOCATION = '/tmp/brow-nginx-dummy.conf'
 
-  def initialize(services)
+  def initialize(app_manager)
     unless `nginx -v 2>&1` =~ /^nginx\:/
       puts "Please install nginx"
       exit 1
     end
-    @services = services
+    @app_manager = app_manager
   end
 
   def generate_config
     nginx_config = Brow::NginxConfig.new
-    @services.pebble_names.each do |pebble|
-      nginx_config.declare_pebble(pebble, {:socket => @services.socket_for(pebble), :pwd => @services.pwd_for(pebble)})
-    end
-    @services.app_names.each do |app|
-      nginx_config.declare_app(app, {:socket => @services.socket_for(app), :pwd => @services.pwd_for(app)})
+    @app_manager.application_names.each do |app|
+      nginx_config.declare_application(
+        app, 
+        { :socket => @app_manager.socket_for(app), 
+          :pwd => @app_manager.applications[app].root })
     end
     nginx_config.generate
   end

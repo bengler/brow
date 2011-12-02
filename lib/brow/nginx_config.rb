@@ -3,16 +3,10 @@
 class Brow::NginxConfig
 
   def initialize
-    @pebbles = {}
     @apps = {}
   end
   
-  def declare_pebble(name, config)
-    raise "Must specify socket" unless config[:socket]
-    @pebbles[name] = config
-  end
-
-  def declare_app(name, config)
+  def declare_application(name, config)
     raise "Must specify socket" unless config[:socket]
     puts "Warning: No pwd supplied for app #{name}" unless config[:pwd]
     @apps[name] = config
@@ -61,7 +55,7 @@ class Brow::NginxConfig
   end
 
   def upstream
-    @pebbles.merge(@apps).map do |name, options|
+    @apps.map do |name, options|
       """
       upstream #{name} {
         server unix:#{options[:socket]} fail_timeout=30;
@@ -95,8 +89,8 @@ class Brow::NginxConfig
       """
     end
 
-    # Proxy forwarding for pebbles
-    @pebbles.keys.each do |name|
+    # Proxy forwarding to all other apps
+    (@apps.keys - [name]).each do |name|
       result << pebble_location(name)
     end
 

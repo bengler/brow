@@ -1,8 +1,8 @@
 # Adds localhost-mappings to /etc/hosts
 
 module Brow::HostsFile
-  def self.update(service_names, domain = 'dev')
-    service_lines = service_names.map do |name|
+  def self.update(application_names, domain = 'dev')
+    service_lines = application_names.map do |name|
       "127.0.0.1\t#{name}.#{domain}\t#brow"
     end
     hosts_file_path = "/etc/hosts"

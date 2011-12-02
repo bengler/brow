@@ -7,30 +7,35 @@ class Brow::Watcher
 
   IGNORE_FILES = /\.log$/
 
-  def initialize(services)
-    @services = services
+  def initialize(app_manager)
+    @app_manager = app_manager
     @restart_queue = Queue.new
     @growl_enabled = !`which growlnotify`.empty?
   end
 
-  def start(service_names = nil)
-    service_names ||= @services.service_names
+  def start(application_names = nil)
+    rails_services, to_watch = @app_manager.applications.values.partition do |app| 
+      !app.rails?
+    end.map(&:name)
 
-    rails_services, service_names = service_names.partition do |service|
-      @services.is_rails_app?(service)
-    end
-    unless rails_services.empty?
-      puts "Found rails in Gemfile, not watching: #{rails_services.join(', ')}"
+    to_watch.each { |service| watch(service) }
+    puts "(Ignoring #{ignore.join(', ')} because Rails takes care of its own reloading.)" unless rails_services.empty?
+
+    if to_watch.empty? 
+      puts "Nothing to watch :-("
+      exit 0
     end
 
-    service_names.each { |service| watch(service) }
-    puts "Watching #{service_names.join(', ')}"
+    puts "Watching #{to_watch.join(', ')}."
+
     puts "(Install growlnotify (http://growl.info/downloads.php) to be notified of restarts in style.)" unless @growl_enabled
+    puts
+    
     begin
       while true
         service = @restart_queue.pop
-        notification('Brow', "Restarting #{service}")
-        @services.restart(service)
+        @app_manager.restart(service)
+        notification('Brow', "Reloaded #{service}")
       end
     rescue Interrupt
       puts "Signing off"
@@ -38,7 +43,7 @@ class Brow::Watcher
   end
 
   def watch(service_name)
-    listener = Guard::Listener.select_and_init(@services.pwd_for(service_name))
+    listener = Guard::Listener.select_and_init(@app_manager.applications[service_name].root)
     last_change_event = nil
     listener.on_change do |files|
       files.reject!{ |f| f =~ IGNORE_FILES }

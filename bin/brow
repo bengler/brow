@@ -41,23 +41,18 @@ module Brow
 
     desc "list", "Show status for all configured services"
     def list
-      running = wrangler.services.running 
-      say "Apps:"
-      wrangler.services.app_names.each do |name|
-        say " - #{name} #{running.include?(name) ? '(up)' : '(down)'}"
+      running = wrangler.app_manager.running 
+      wrangler.app_manager.application_names.each do |name|
+        say "  #{name} #{running.include?(name) ? '(up)' : '(down)'}"
       end
-      say "Pebbles:"
-      wrangler.services.pebble_names.each do |name|
-        say " - #{name} #{running.include?(name) ? '(up)' : '(down)'}"
-      end
-      say "Nginx #{wrangler.proxy.running? ? '(up)' : '(down)'}"
+      say "  nginx #{wrangler.proxy.running? ? '(up)' : '(down)'}"
     end
 
     desc "exec COMMAND", "Execute a shell command in all mounted apps and pebbles"
     method_options :command => :array
     def exec(*command)
       command = command.join(' ')
-      wrangler.services.service_dirs.each do |dir|
+      wrangler.app_manager.service_dirs.each do |dir|
         puts "#{dir}$ #{command}"
         Brow::ShellEnvironment.exec("#{command} 1>&2", dir)
         puts

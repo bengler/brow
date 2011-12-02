@@ -1,24 +1,22 @@
 # Practically the command line tool as a class
 
 class Brow::Wrangler
-  attr_reader :services, :proxy
+  attr_reader :app_manager, :proxy
 
   ROOT_PATH = "#{ENV['HOME']}/.brow"
 
   def initialize
-    @services = Brow::Services.new
-    @proxy = Brow::Proxy.new(@services)
+    @app_manager = Brow::AppManager.new
+    @proxy = Brow::Proxy.new(@app_manager)
   end
 
   def ensure_brow_folders
     ensure_folder_exists(ROOT_PATH)
-    ensure_folder_exists(ROOT_PATH+"/pebbles")
-    ensure_folder_exists(ROOT_PATH+"/apps")
   end
 
   def up
     puts "Launching all unicorns ..."
-    @services.launch_all
+    @app_manager.launch_all
 
     unless @proxy.running?
       puts "Launching nginx."
@@ -34,10 +32,10 @@ class Brow::Wrangler
     end
 
     puts "Updating /etc/hosts"
-    Brow::HostsFile.update(@services.app_names)
+    Brow::HostsFile.update(@app_manager.application_names)
     
     puts "Done. Stand by for headcount."
-    assert_all_services_running
+    assert_all_apps_running
     assert_nginx_running
 
     puts "Yay! All systems go"
@@ -47,61 +45,61 @@ class Brow::Wrangler
     puts "Killing nginx"
     @proxy.stop if @proxy.running?
     puts "Killing all unicorns ..."
-    @services.kill_all
-    assert_all_services_stopped
+    @app_manager.kill_all
+    assert_all_apps_stopped
   end
 
-  def restart(service_name, hard = false)
-    unless @services.service_names.include?(service_name)
-      puts "#{service_name} who?"
+  def restart(app_name, hard = false)
+    unless @app_manager.application_names.include?(app_name)
+      puts "#{app_name} who?"
       return
     end
 
-    unless @services.running.include?(service_name)
-      puts "#{service_name} is not running"
+    unless @app_manager.running.include?(app_name)
+      puts "#{app_name} is not running"
       return
     end
 
     begin
-      @services.restart(service_name, hard)
+      @app_manager.restart(app_name, hard)
     rescue Timeout::Error
-      puts "Sorry. Failed to kill #{service_name}"
+      puts "Sorry. Failed to kill #{app_name}"
     end
 
-    assert_all_services_running([service_name])
+    assert_all_apps_running([app_name])
   end
 
   def restart_all(hard = false)
-    @services.service_names.each do |name|
+    @app_manager.application_names.each do |name|
       restart(name, hard)
     end
   end
 
   def watch
-    Brow::Watcher.new(Brow::Services.new).start
+    Brow::Watcher.new(Brow::AppManager.new).start
   end
 
-  def assert_all_services_stopped
+  def assert_all_apps_stopped
     begin
       Timeout.timeout(10) do
-        sleep 1 until @services.running.empty?
+        sleep 1 until @app_manager.running.empty?
       end
       return true
     rescue Timeout::Error
-      puts "Fatal: #{@services.running.join(', ')} refuse to die"
+      puts "Fatal: #{@app_manager.running.join(', ')} refuse to die"
       exit 1
     end
   end
 
-  def assert_all_services_running(service_names = nil)
-    service_names ||= @services.service_names
+  def assert_all_apps_running(application_names = nil)
+    application_names ||= @app_manager.application_names
     begin
       Timeout.timeout(10) do
-        sleep 0.5 until (service_names - @services.running).empty?
+        sleep 0.5 until (application_names - @app_manager.running).empty?
       end
       return true
     rescue Timeout::Error
-      missing = service_names - @services.running
+      missing = application_names - @app_manager.running
       puts "Warning: #{missing.join(', ')} has failed to launch." 
       exit 1
     end
