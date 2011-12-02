@@ -15,18 +15,18 @@ class Brow::Watcher
 
   def start(application_names = nil)
     rails_services, to_watch = @app_manager.applications.values.partition do |app| 
-      !app.rails?
-    end.map(&:name)
+      app.rails?
+    end
 
-    to_watch.each { |service| watch(service) }
-    puts "(Ignoring #{ignore.join(', ')} because Rails takes care of its own reloading.)" unless rails_services.empty?
+    to_watch.map(&:name).each { |service| watch(service) }
+    puts "(Not watching #{rails_services.map(&:name).join(', ')} because Rails takes care of its own reloading.)" unless rails_services.empty?
 
     if to_watch.empty? 
       puts "Nothing to watch :-("
       exit 0
     end
 
-    puts "Watching #{to_watch.join(', ')}."
+    puts "Watching #{to_watch.map(&:name).join(', ')}."
 
     puts "(Install growlnotify (http://growl.info/downloads.php) to be notified of restarts in style.)" unless @growl_enabled
     puts
