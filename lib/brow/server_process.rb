@@ -66,9 +66,15 @@ class Brow::ServerProcess
   end
 
   def self.launch(pwd)
+    service_name = File.basename(pwd)
+
+    config_file_name = "/tmp/brow-#{service_name}-unicorn.config.rb"
+    File.open(config_file_name, 'w') {|f| f.write(Brow::UnicornConfig.new(:pwd => pwd).generate) }
+
     socket = socket_for_service(File.basename(pwd))
+
     result = Brow::ShellEnvironment.exec(
-      "BUNDLE_GEMFILE=#{pwd}/Gemfile bundle exec unicorn -D -l #{socket} config.ru", pwd)
+      "BUNDLE_GEMFILE=#{pwd}/Gemfile bundle exec unicorn -D -l #{socket} --config-file #{config_file_name} config.ru", pwd)
     puts result unless result.empty?
     socket
   end

@@ -6,7 +6,6 @@ class Brow::NginxConfig
     @pebbles = {}
     @apps = {}
   end
-
   
   def declare_pebble(name, config)
     raise "Must specify socket" unless config[:socket]
@@ -33,7 +32,7 @@ class Brow::NginxConfig
     """
   end
 
-  def config
+  def generate
     result = preamble   
     result << """    
     http {

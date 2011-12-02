@@ -13,7 +13,7 @@ class Brow::Proxy
     @services = services
   end
 
-  def config
+  def generate_config
     nginx_config = Brow::NginxConfig.new
     @services.pebble_names.each do |pebble|
       nginx_config.declare_pebble(pebble, {:socket => @services.socket_for(pebble), :pwd => @services.pwd_for(pebble)})
@@ -21,11 +21,11 @@ class Brow::Proxy
     @services.app_names.each do |app|
       nginx_config.declare_app(app, {:socket => @services.socket_for(app), :pwd => @services.pwd_for(app)})
     end
-    nginx_config.config
+    nginx_config.generate
   end
 
   def write_config(filename)
-    File.open(filename, 'w') {|f| f.write(config) }
+    File.open(filename, 'w') {|f| f.write(generate_config) }
   end
 
   def valid_config?
