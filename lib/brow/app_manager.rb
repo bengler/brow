@@ -43,6 +43,8 @@ class Brow::AppManager
   end
 
   def kill_all
+    to_kill = servers.keys
+    puts "Killing #{to_kill.join(', ')}" unless to_kill.empty?
     Brow::ServerProcess.kill_all
   end
 

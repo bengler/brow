@@ -52,7 +52,7 @@ module Brow
     method_options :command => :array
     def exec(*command)
       command = command.join(' ')
-      wrangler.app_manager.service_dirs.each do |dir|
+      wrangler.app_manager.application_dirs.each do |dir|
         puts "#{dir}$ #{command}"
         Brow::ShellEnvironment.exec("#{command} 1>&2", dir)
         puts

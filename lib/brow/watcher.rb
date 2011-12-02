@@ -5,7 +5,7 @@ require 'thread'
 class Brow::Watcher
   attr_reader :restart_queue
 
-  IGNORE_FILES = /\.log$/
+  IGNORE_FILES = /\.log$|\.git/
 
   def initialize(app_manager)
     @app_manager = app_manager
@@ -30,7 +30,7 @@ class Brow::Watcher
 
     puts "(Install growlnotify (http://growl.info/downloads.php) to be notified of restarts in style.)" unless @growl_enabled
     puts
-    
+
     begin
       while true
         service = @restart_queue.pop
