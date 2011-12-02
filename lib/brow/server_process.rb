@@ -5,7 +5,7 @@ class Brow::ServerProcess
 
   def initialize(pid)
     @pid = pid
-    @pwd = `lsof -a -p #{pid} -d cwd -Fn`.chomp("\n")
+    @pwd = `lsof -a -p #{pid} -d cwd -Fn`.split(/\n/).find{|l| l =~ /^n/}[1..-1].chomp("\n")
     @name = File.basename(@pwd)
   end
 
