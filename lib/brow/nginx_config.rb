@@ -67,6 +67,7 @@ class Brow::NginxConfig
   def pebble_location(pebble_name)
     """
     location /api/#{pebble_name} {
+      ssi on;
       proxy_pass http://#{pebble_name};
       proxy_set_header X-Forwarded-Host $host;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -97,6 +98,7 @@ class Brow::NginxConfig
     # The actual app
     result << """
       location / {
+        ssi on;
         if (!-f $request_filename) {
           proxy_pass http://#{name};
         }
