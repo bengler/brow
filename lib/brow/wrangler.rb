@@ -15,7 +15,7 @@ class Brow::Wrangler
   end
 
   def up
-    puts "Launching all unicorns ..."
+    puts "Releasing all unicorns ..."
     @app_manager.launch_all
 
     unless @proxy.running?
@@ -44,7 +44,7 @@ class Brow::Wrangler
   def down
     puts "Killing nginx"
     @proxy.stop if @proxy.running?
-    puts "Killing all unicorns ..."
+    puts "Giving all unicorns a break ..."
     @app_manager.kill_all
     assert_all_apps_stopped
   end
@@ -63,7 +63,7 @@ class Brow::Wrangler
     begin
       @app_manager.restart(app_name, hard)
     rescue Timeout::Error
-      puts "Sorry. Failed to kill #{app_name}"
+      puts "Sorry. Failed to still #{app_name}."
     end
 
     assert_all_apps_running([app_name])
@@ -86,7 +86,7 @@ class Brow::Wrangler
       end
       return true
     rescue Timeout::Error
-      puts "Fatal: #{@app_manager.running.join(', ')} refuse to die"
+      puts "Fatal: #{@app_manager.running.join(', ')} refuse to take a breather."
       exit 1
     end
   end
