@@ -18,19 +18,15 @@ class Brow::UnicornConfig
       stderr_path "/tmp/brow-#{@service_name}.stderr.log"
       stdout_path "/tmp/brow-#{@service_name}.stdout.log"
 
-      hupper_enabled = !!defined?(Hupper)
-      preload_app hupper_enabled
-      unless defined?(Hupper)
-        $stderr.puts "Brow warning: Running your app in legacy mode. Please use Hupper to handle connections. (https://github.com/origo/hupper)"
-      end
+      preload_app false
 
       before_fork do |server, worker|
-        Hupper.release! if hupper_enabled
+        Hupper.release! if defined?(Hupper)
         sleep 1
       end
 
       after_fork do |server, worker|
-        Hupper.initialize! if hupper_enabled
+        Hupper.initialize! if defined?(Hupper)
       end
     END
   end

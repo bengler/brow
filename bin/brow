@@ -64,6 +64,11 @@ module Brow
       wrangler.watch
     end
 
+    desc "tail", "Tail the stderr-logs of all services"
+    def tail
+      `tail -f /tmp/brow-*.stderr.log 1>&2`
+    end
+
     private
 
     def wrangler
