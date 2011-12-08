@@ -53,7 +53,7 @@ class Brow::ServerProcess
 
   def self.graceful_restart(name)
     if proc = find_by_name(name)
-      `kill -s HUP #{proc.pid}`
+      `kill -s USR2 #{proc.pid}`
       sleep 0.5
       Timeout::timeout(5) do        
         sleep 0.5 until kill_old_unicorns == 0
