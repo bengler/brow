@@ -98,6 +98,7 @@ class Brow::NginxConfig
     # The actual app
     result << """
       location / {
+        proxy_set_header X-Forwarded-Host $host;
         ssi on;
         if (!-f $request_filename) {
           proxy_pass http://#{name};
