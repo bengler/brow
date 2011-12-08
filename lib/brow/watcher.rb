@@ -5,7 +5,7 @@ require 'thread'
 class Brow::Watcher
   attr_reader :restart_queue
 
-  IGNORE_FILES = /\.log$|\.git/
+  IGNORE_FILES = /\.log$|\.git|\.js\b|\.s[ac]ss$|\.css$/
 
   def initialize(app_manager)
     @app_manager = app_manager

@@ -9,10 +9,7 @@ module Brow
     include Thor::Actions
     default_task :help    
 
-    map '-r' => 'restart'
     map 'status' => 'list'
-    map 'raise' => 'up'
-    map 'frowm' => 'down'
 
     desc "up", "Launch services"
     def up
@@ -24,7 +21,12 @@ module Brow
       wrangler.down
     end
 
-    desc "restart [service] [--hard]", "Restart a single service or toggle the whole enchilada"
+    desc "start [SERVICE]", "Starts (or restarts) a service"
+    def start(name = nil)
+      restart(name)
+    end
+
+    desc "restart [SERVICE] [--hard]", "Restart a single service or toggle the whole enchilada"
     method_options :hard => :boolean, :alias => :string
     def restart(name = nil)
       if name
@@ -37,6 +39,11 @@ module Brow
           wrangler.restart_all
         end
       end
+    end
+
+    desc "kill SERVICE", "Kills one service"
+    def kill(name)
+      wrangler.kill(name)
     end
 
     desc "list", "Show status for all configured services"

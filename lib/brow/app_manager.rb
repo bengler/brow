@@ -78,7 +78,7 @@ class Brow::AppManager
       puts "Reloading #{name}"
       Brow::ServerProcess.graceful_restart(name)
     else
-      kill(name)
+      kill(name) if running?(name)
       Timeout::timeout(5) do
         sleep 1 while running?(name)
       end

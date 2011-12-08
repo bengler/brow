@@ -55,18 +55,20 @@ class Brow::Wrangler
       return
     end
 
-    unless @app_manager.running.include?(app_name)
-      puts "#{app_name} is not running"
-      return
-    end
+    hard = true unless @app_manager.running?(app_name)
 
     begin
       @app_manager.restart(app_name, hard)
     rescue Timeout::Error
-      puts "Sorry. Failed to still #{app_name}."
+      puts "Sorry. Failed to restart #{app_name}."
     end
 
     assert_all_apps_running([app_name])
+  end
+
+  def kill(app_name)
+    @app_manager.kill(app_name)
+    assert_all_apps_stopped([app_name])
   end
 
   def restart_all(hard = false)
@@ -79,10 +81,11 @@ class Brow::Wrangler
     Brow::Watcher.new(Brow::AppManager.new).start
   end
 
-  def assert_all_apps_stopped
+  def assert_all_apps_stopped(application_names = nil)
+    application_names ||= @app_manager.application_names
     begin
       Timeout.timeout(10) do
-        sleep 1 until @app_manager.running.empty?
+        sleep 1 until (@app_manager.running & application_names).empty?
       end
       return true
     rescue Timeout::Error
