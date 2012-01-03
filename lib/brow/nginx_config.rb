@@ -80,6 +80,7 @@ class Brow::NginxConfig
     result = """
       listen 80;
       server_name #{name}.dev;
+      client_max_body_size 20M;
     """
     
     # Logging and public folder
