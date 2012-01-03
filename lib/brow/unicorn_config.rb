@@ -6,7 +6,7 @@ class Brow::UnicornConfig
   def initialize(options)
     @pwd = options[:pwd]
     @workers = options[:workers] || 4
-    @timeout = options[:timeout] || 5
+    @timeout = options[:timeout] || 30
     @service_name = options[:service_name] || File.basename(@pwd)
   end
 
