@@ -49,7 +49,7 @@ class Brow::Proxy
   end
 
   def running?
-    `ps -ax | grep nginx`.scan(NGINX_CONFIG_FILE_LOCATION).size > 0
+    `ps ax | grep nginx`.scan(NGINX_CONFIG_FILE_LOCATION).size > 0
   end
 
 end
