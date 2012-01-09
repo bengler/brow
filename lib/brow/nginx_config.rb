@@ -120,6 +120,7 @@ class Brow::NginxConfig
       case `which nginx` 
       when /^\/usr/
         files = `dpkg -L nginx`.split("\n")
+        files += `dpkg -L nginx-common`.split("\n")   # for versions from ppa:nginx/stable
       else
         puts "Nginx must be installed via either dpkg"
         exit 1
