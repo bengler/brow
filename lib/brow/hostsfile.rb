@@ -14,6 +14,12 @@ module Brow::HostsFile
     end
     %x{cp #{hosts_file_path} #{ENV['HOME']}/hosts-powder.bak}
     %x{sudo mv #{ENV['HOME']}/hosts-brow #{hosts_file_path}}
-    %x{dscacheutil -flushcache}
+    if %x{uname} =~ /^Linux/
+      if %x{which nscd} =~ /nscd/
+        %x{sudo service nscd restart}
+      end
+    else
+      %x{dscacheutil -flushcache}
+    end
   end
 end
