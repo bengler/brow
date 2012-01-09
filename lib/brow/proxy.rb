@@ -6,7 +6,7 @@ class Brow::Proxy
   NGINX_CONFIG_FILE_LOCATION = '/tmp/brow-nginx-dummy.conf'
 
   def initialize(app_manager)
-    unless `nginx -v 2>&1` =~ /^nginx\:/
+    unless `nginx -v 2>&1` =~ /version/
       puts "Please install nginx"
       exit 1
     end
