@@ -116,16 +116,7 @@ class Brow::NginxConfig
 
   def locate_mime_types
     case `uname`
-    when /^Linux/
-      case `which nginx` 
-      when /^\/usr/
-        files = `dpkg -L nginx`.split("\n")
-        files += `dpkg -L nginx-common`.split("\n")   # for versions from ppa:nginx/stable
-      else
-        puts "Nginx must be installed via either dpkg"
-        exit 1
-      end
-    else
+    when /^Darwin/
       case `which nginx` 
       when /^\/opt/
         files = `port contents nginx`.split("\n").map(&:strip)
@@ -133,6 +124,15 @@ class Brow::NginxConfig
         files = `brew list nginx`.split("\n")
       else
         puts "Nginx must be installed via either homebrew or macports"
+        exit 1
+      end
+    else
+      case `which nginx` 
+      when /^\/usr/
+        files = `dpkg -L nginx`.split("\n")
+        files += `dpkg -L nginx-common`.split("\n")   # for versions from ppa:nginx/stable
+      else
+        puts "Nginx must be installed via either dpkg"
         exit 1
       end
     end

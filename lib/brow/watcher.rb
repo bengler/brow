@@ -19,7 +19,6 @@ class Brow::Watcher
       app.rails?
     end
 
-    to_watch.map(&:name).each { |service| watch(service) }
     puts "(Not watching #{rails_services.map(&:name).join(', ')} because Rails takes care of its own reloading.)" unless rails_services.empty?
 
     if to_watch.empty? 
@@ -29,8 +28,8 @@ class Brow::Watcher
 
     puts "Watching #{to_watch.map(&:name).join(', ')}."
 
-    puts "(Install growlnotify (http://growl.info/downloads.php) to be notified of restarts in style.)" unless @growl_enabled
-    puts "(Install libnotify-bin (sudo apt-get install libnotify-bin) to be notified of restarts in style.)" unless @notify_enabled and `uname` =~ /^Linux/
+    puts "(Install growlnotify (http://growl.info/downloads.php) to be notified of restarts in style.)" unless @growl_enabled and `uname` =~ /^Darwin/
+    puts "(Install libnotify-bin (sudo apt-get install libnotify-bin) to be notified of restarts in style.)" unless @notify_enabled
     puts
 
     begin
@@ -70,7 +69,10 @@ class Brow::Watcher
 
   def notification(title, text)
     icon = File.expand_path("#{File.dirname(__FILE__)}/../../asset/icon48.png")
-    `growlnotify --message "#{text}" --image #{icon} #{title}` if @growl_enabled
-    `notify-send --icon=#{icon} "#{title}" "#{text}"` if @notify_enabled
+    if @growl_enabled
+      `growlnotify --message "#{text}" --image #{icon} #{title}` 
+    elsif @notify_enabled
+    `notify-send --icon=#{icon} "#{title}" "#{text}"`
+    end
   end
 end
