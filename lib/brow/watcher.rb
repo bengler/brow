@@ -44,7 +44,7 @@ class Brow::Watcher
   end
 
   def watch(service_name)
-    listener = Guard::Listener.select_and_init(@app_manager.applications[service_name].root)
+    listener = Guard::Listener.select_and_init(:watchdir => @app_manager.applications[service_name].root)
     last_change_event = nil
     listener.on_change do |files|
       files.reject!{ |f| f =~ IGNORE_FILES }
