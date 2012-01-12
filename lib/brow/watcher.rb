@@ -29,8 +29,11 @@ class Brow::Watcher
 
     puts "Watching #{to_watch.map(&:name).join(', ')}."
 
-    puts "(Install growlnotify (http://growl.info/downloads.php) to be notified of restarts in style.)" unless @growl_enabled and `uname` =~ /^Darwin/
-    puts "(Install libnotify-bin (sudo apt-get install libnotify-bin) to be notified of restarts in style.)" unless @notify_enabled
+    if `uname` =~ /^Darwin/
+      puts "(Install growlnotify (http://growl.info/downloads.php) to be notified of restarts in style.)" unless @growl_enabled 
+    else
+      puts "(Install libnotify-bin (sudo apt-get install libnotify-bin) to be notified of restarts in style.)" unless @notify_enabled
+    end
     puts
 
     begin
