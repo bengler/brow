@@ -5,7 +5,7 @@ require 'thread'
 class Brow::Watcher
   attr_reader :restart_queue
 
-  IGNORE_FILES = /\.log$|\.git|\.js\b|\.s[ac]ss$|\.css$/
+  IGNORE_FILES = /\.log$|\.git|\.js\b|\.s[ac]ss$|\.css$|\.idea/
 
   def initialize(app_manager)
     @app_manager = app_manager
@@ -51,6 +51,7 @@ class Brow::Watcher
     listener = Guard::Listener.select_and_init(:watchdir => @app_manager.applications[service_name].root)
     last_change_event = nil
     listener.on_change do |files|
+      puts "Files? #{files.inspect}"
       files.reject!{ |f| f =~ IGNORE_FILES }
       unless files.empty?
         puts "(!) #{files.join(', ')}"
