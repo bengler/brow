@@ -42,7 +42,7 @@ class Brow::ServerProcess
   end
 
   def self.old_unicorns
-    `ps ax | grep 'unicorn master (old)'`.split("\n").map{|line| line.scan(/^(\d+).*\d\:\d\d\.\d\d unicorn/)}.flatten
+    `ps ax | grep 'unicorn master (old)'`.split("\n").map{|line| line.scan(/^\s*(\d+).*#{SOCKET_NAME_PREFIX}/)}.flatten
   end
 
   def self.kill_old_unicorns
