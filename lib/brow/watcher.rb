@@ -19,6 +19,7 @@ class Brow::Watcher
       app.rails?
     end
 
+    to_watch.map(&:name).each { |service| watch(service) }
     puts "(Not watching #{rails_services.map(&:name).join(', ')} because Rails takes care of its own reloading.)" unless rails_services.empty?
 
     if to_watch.empty? 
