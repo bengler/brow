@@ -98,12 +98,20 @@ class Brow::NginxConfig
 
     # The actual app
     result << """
-      location / {
-        proxy_set_header X-Forwarded-Host $host;
-        ssi on;
-        if (!-f $request_filename) {
-          proxy_pass http://#{name};
-        }
+      ssi on;
+      
+      location ~* \.(css|gif|ico|jpeg|jpg|js|png)$ {
+        try_files $uri @unicorn;
+        expires 10m;
+      }
+
+      location / {        
+        try_files $uri @unicorn;
+      }
+
+      location @unicorn {
+        proxy_set_header Host $http_host;
+        proxy_pass http://#{name};
       }
     """
 
