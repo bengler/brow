@@ -100,7 +100,7 @@ class Brow::NginxConfig
     result << """
       ssi on;
       
-      location ~* \.(css|gif|ico|jpeg|jpg|js|png)$ {
+      location ~* \.(css|gif|ico|jpeg|jpg|png)$ {
         try_files $uri @unicorn;
         expires 10m;
       }
