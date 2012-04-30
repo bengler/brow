@@ -100,6 +100,7 @@ class Brow::NginxConfig
     # The actual app
     result << """
       ssi on;
+      ssi_value_length 1024;
       
       location ~* \.(css|gif|ico|jpeg|jpg|png)$ {
         try_files $uri @unicorn;
