@@ -5,7 +5,7 @@ class Brow::Application
 
   def initialize(root)
     @root = root
-    @name = File.basename(@root)
+    @name = File.basename(@root).downcase
   end
 
   def rails?

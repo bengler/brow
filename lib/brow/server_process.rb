@@ -9,7 +9,7 @@ class Brow::ServerProcess
     @pid = pid
     pwd_line = `lsof -a -p #{pid} -d cwd -Fn`.split(/\n/).find{|l| l =~ /^n/}
     @pwd = pwd_line[1..-1].chomp("\n") if pwd_line
-    @name = File.basename(@pwd) if @pwd
+    @name = File.basename(@pwd).downcase if @pwd
   end
 
   def socket
