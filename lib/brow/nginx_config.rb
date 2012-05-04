@@ -6,10 +6,13 @@ class Brow::NginxConfig
     @apps = {}
   end
   
-  def declare_application(name, config)
+  def declare_application(name, config, options = {})
     raise "Must specify socket" unless config[:socket]
     puts "Warning: No pwd supplied for app #{name}" unless config[:pwd]
     @apps[name] = config
+    if options[:default]
+      @default_application_name = name
+    end
   end
 
   def preamble    
@@ -44,14 +47,17 @@ class Brow::NginxConfig
       uwsgi_temp_path /tmp/uwsgi_temp;
       scgi_temp_path /tmp/scgi_temp;
 
-
       #{upstream}
 
       #{@apps.keys.map do |name|
         server(name)
       end.join("\n")}
-    }
-    """
+    "
+    if @default_application_name
+      result << server(@default_application_name, '*.dev')
+    end
+    result << "\n}"
+    result
   end
 
   def upstream
@@ -76,14 +82,15 @@ class Brow::NginxConfig
     """
   end
 
-  def server(name)    
+  def server(name, vhost_name = nil)
+    vhost_name ||= "#{name}.dev"
     socket = @apps[name]
     result = """
       listen 80;
-      server_name #{name}.dev;
       client_max_body_size 20M;
+      server_name #{vhost_name};
     """
-    
+
     # Logging and public folder
     if pwd = @apps[name][:pwd]
       result << """

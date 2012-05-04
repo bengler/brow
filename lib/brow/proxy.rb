@@ -19,7 +19,8 @@ class Brow::Proxy
       nginx_config.declare_application(
         app, 
         { :socket => @app_manager.socket_for(app), 
-          :pwd => @app_manager.applications[app].root })
+          :pwd => @app_manager.applications[app].root },
+        :default => (@app_manager.default_application_name == app))
     end
     nginx_config.generate
   end

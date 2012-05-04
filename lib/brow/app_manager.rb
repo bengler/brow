@@ -38,6 +38,16 @@ class Brow::AppManager
     applications.values.map(&:root)
   end
 
+  def default_application_name
+    default_config_file_name = File.join(@root, 'default')
+    if File.exist?(default_config_file_name)
+      name = File.read(default_config_file_name).strip
+      if application_names.include?(name)
+        return name
+      end
+    end
+  end
+
   def application_names
     applications.keys
   end
