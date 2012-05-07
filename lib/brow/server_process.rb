@@ -1,5 +1,6 @@
-# Enumerating, killing and launching individual web servers
+require 'yaml'
 
+# Enumerating, killing and launching individual web servers
 class Brow::ServerProcess
   attr_reader :pid, :pwd, :name
 
@@ -70,8 +71,22 @@ class Brow::ServerProcess
   def self.launch(pwd)
     service_name = File.basename(pwd)
 
+    unicorn_options = {:pwd => pwd}
+
+    config_path = File.join(pwd, ".brow")
+    if File.exist?(config_path)
+      config = YAML.load(File.open(config_path)) || {}
+      if (workers = config['workers'])
+        unicorn_options[:workers] = workers.to_i
+      end
+    end
+
+    unicorn = Brow::UnicornConfig.new(unicorn_options)
+
     config_file_name = "/tmp/brow-#{service_name}-unicorn.config.rb"
-    File.open(config_file_name, 'w') {|f| f.write(Brow::UnicornConfig.new(:pwd => pwd).generate) }
+    File.open(config_file_name, 'w') do |f|
+      f.write(unicorn.generate) 
+    end
 
     socket = socket_for_service(File.basename(pwd))
 
