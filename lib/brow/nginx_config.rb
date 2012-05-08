@@ -153,7 +153,8 @@ class Brow::NginxConfig
         exit 1
       end
     end
-    files.find{ |file| file =~ /mime.types$/ }
+    file = files.find{ |file| file =~ /mime.types$/ }
+    file ||= files.find{ |file| file =~ /mime.types.example$/ }
   end
 
 end
