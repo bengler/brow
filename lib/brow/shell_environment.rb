@@ -9,17 +9,18 @@ module Brow::ShellEnvironment
       dir = "#{dir}/" unless dir =~ /\/$/
       ENV['RBENV_DIR'] = dir 
     end
-    cmdline = "cd #{dir}"
+    cmdline = []
     if File.exist?(File.join(dir, '.rvmrc'))
       # For RVM, we must make sure we trust our .rvmrc, which also requires
       # reloading RVM
-      cmdline << ' && rvm rvmrc trust'
-      cmdline << ' && rvm reload'
+      cmdline.push "rvm rvmrc trust '#{dir}'"
+      cmdline.push "cd '#{dir}'"
+      cmdline.push "rvm reload"
+    else
+      cmdline.push "cd '#{dir}'"
     end
-    cmdline << ' && ('
-    cmdline << commands.gsub(%("), %(\\"))
-    cmdline << ')'
-    `bash -lc "#{cmdline}"`
+    cmdline.push "(#{commands.gsub(%("), %(\\"))})"
+    `bash -lc "#{cmdline.join(' && ')}"`
   end
 
 end
