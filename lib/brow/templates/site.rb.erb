@@ -37,7 +37,7 @@ LOGGER = Class.new(Logger) do # anonymous class instance, think lambda
 end.new
 
 at_exit do
-  if $! and not $!.is_a? SystemExit
+  if $! and not $!.is_a? SystemExit and not $!.is_a? SignalException
     LOGGER.fatal($!.inspect)
     LOGGER.fatal($!.backtrace.join("\n"))
   end
@@ -46,6 +46,7 @@ end
 # Load Bundler gems
 require "bundler"
 b = Bundler.setup
+require 'rails/all' if b.gems['rails'].any?
 Bundler.require
 
 # Attach logger to some common systems
@@ -58,10 +59,10 @@ Rails.logger = LOGGER if defined?(Rails)
 ActiveSupport::Deprecation.silenced = true if defined?(ActiveSupport::Deprecation)
 
 # Set up Dalli
-<% unless [nil, '', false, 0, [], {}].include?(memcached) %>
+<% if not [nil, '', false, 0, [], {}].include?(memcached) -%>
 ENV['MEMCACHE_SERVERS'] = '<%= [memcached].flatten.join(",") %>'
 
-<% end %>
+<% end -%>
 if defined?(Dalli)
   class Dalli::Client
     alias_method :initialize_wo_defaults, :initialize

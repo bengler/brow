@@ -4,8 +4,6 @@ require 'yaml'
 class Brow::ServerProcess
   attr_reader :pid, :pwd, :name
 
-  SOCKET_NAME_PREFIX="brow-service-"
-
   def initialize(pid)
     @pid = pid
     pwd_line = `lsof -a -p #{pid} -d cwd -Fn`.split(/\n/).find{|l| l =~ /^n/}
@@ -64,55 +62,8 @@ class Brow::ServerProcess
     false
   end
 
-  def self.socket_for_service(name)
-    "/tmp/#{SOCKET_NAME_PREFIX}#{name}.sock"
-  end
-
-  def self.service_name(pwd)
-    File.basename(pwd)
-  end
-
-  def self.generate_unicorn_config(pwd, file_name)
-    options = {
-      :pwd => pwd, 
-      :socket => socket_for_service(service_name(pwd)),
-      :pidfile => "/tmp/brow-#{service_name(pwd)}.pid"
-    }
-
-    config_path = File.join(pwd, ".brow")
-    if File.exist?(config_path)
-      config = YAML.load(File.open(config_path)) || {}
-      if (workers = config['workers'])
-        options[:workers] = workers.to_i
-      end
-    end
-    
-    File.open(file_name, 'w') do |f|
-      f.write(Brow::UnicornConfig.generate(options)) 
-    end
-  end
-
-  def self.generate_site_config(pwd, file_name)
-    env = "development"
-    name = service_name(pwd)
-    memcached = nil
-    File.open(file_name, 'w') do |f|
-      f.write(ERB.new(File.read("#{HOME}/lib/brow/templates/site.rb.erb")).result(binding))
-    end
-  end
-
   def self.launch(pwd)
-    service_name = service_name(pwd)
-    config_file_name = "/tmp/brow-#{service_name(pwd)}-unicorn.config.rb"
-
-    generate_unicorn_config(pwd, config_file_name)
-    generate_site_config(pwd, "#{pwd}/config/site.rb")
-
-    result = Brow::ShellEnvironment.exec(
-      "BUNDLE_GEMFILE=#{pwd}/Gemfile bundle exec unicorn -D --config-file #{config_file_name} config.ru", pwd)
-    puts result unless result.empty?
-
-    socket_for_service(service_name(pwd))
+    Brow::ServerConfig.new(pwd).launch
   end
 
 end
