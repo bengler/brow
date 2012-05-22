@@ -1,0 +1,39 @@
+working_directory "<%= appdir %>"
+listen "<%= socket %>"
+pid "<%= pidfile %>"
+worker_processes <%= workers %>
+timeout 60
+preload_app true
+
+require "<%= appdir %>/config/site.rb"
+logger LOGGER
+
+before_fork do |server, worker|
+  # Set up ping routes by wrapping app
+  server.app = Rack::Builder.new {
+    ping = Proc.new {|env| [200, {"Content-Type" => "text/plain"}, ["<%= name %>"]]}
+    map("/") {run server.app}
+    map("/api/<%= name %>/ping") {run ping}
+    map("/ping") {run ping}
+  }.to_app
+
+  # Close all connections before forking
+  ActiveRecord::Base.connection.disconnect! if defined?(ActiveRecord::Base)
+  ObjectSpace.each_object(Dalli::Client){|client| client.close} if defined?(Dalli)
+
+  # Kill old master, if running (to enable graceful restarts)
+  oldpid = Integer(File.read("<%= pidfile %>.oldbin")) rescue nil
+  if oldpid && oldpid != Process.pid
+    begin
+      Process.kill("QUIT", oldpid)
+    rescue Errno::ENOENT, Errno::ESRCH
+    end
+  end
+end
+
+after_fork do |server, worker|
+  # Re-establish connections after forking
+  ActiveRecord::Base.establish_connection(
+    YAML::load(File.open("config/database.yml"))[ENV["RACK_ENV"]]
+  ) if defined?(ActiveRecord::Base)
+end

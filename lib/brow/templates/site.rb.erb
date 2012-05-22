@@ -1,0 +1,77 @@
+require "logger"
+require "syslog"
+
+# Set up environment
+ENV["RACK_ENV"] ||= ENV["RAILS_ENV"] || "<%= env %>"
+ENV["RAILS_ENV"] = ENV["RACK_ENV"]
+
+# Set up logging to syslog
+raise "LOGGER already defined." if defined?(LOGGER)
+
+LOGGER = Class.new(Logger) do # anonymous class instance, think lambda
+  def initialize(logdev=nil)
+    Syslog.open("<%= name %>", nil, Syslog::LOG_DAEMON)
+    self.level = Logger::INFO
+  end
+
+  def add(severity, message=nil, progname=nil, &block)
+    message = block.call if block
+    message ||= progname
+    return unless message
+    message = message.to_s
+    message = message.gsub("%", "%%") if message =~ /%/
+    message.split("\n").each do |line|
+      line.scan(/.{0,1997}/).select { |part| part.length > 0 }.each do |part|
+        part = "#{part}..." if part.length == 1997
+        Syslog.log({
+          Logger::DEBUG => Syslog::LOG_DEBUG,
+          Logger::ERROR => Syslog::LOG_ERR,
+          Logger::FATAL => Syslog::LOG_CRIT,
+          Logger::INFO => Syslog::LOG_INFO,
+          Logger::UNKNOWN => Syslog::LOG_NOTICE,
+          Logger::WARN => Syslog::LOG_WARNING,
+        }[severity], part)
+      end
+    end
+  end
+end.new
+
+at_exit do
+  if $! and not $!.is_a? SystemExit
+    LOGGER.fatal($!.inspect)
+    LOGGER.fatal($!.backtrace.join("\n"))
+  end
+end
+
+# Load Bundler gems
+require "bundler"
+b = Bundler.setup
+Bundler.require
+
+# Attach logger to some common systems
+ActionMailer::Base.logger = LOGGER if defined?(ActionMailer::Base)
+ActiveRecord::Base.logger = LOGGER if defined?(ActiveRecord::Base)
+Dalli.logger = LOGGER if defined?(Dalli)
+Delayed::Worker.logger = LOGGER if defined?(Delayed)
+Rails.logger = LOGGER if defined?(Rails)
+
+ActiveSupport::Deprecation.silenced = true if defined?(ActiveSupport::Deprecation)
+
+# Set up Dalli
+<% unless [nil, '', false, 0, [], {}].include?(memcached) %>
+ENV['MEMCACHE_SERVERS'] = '<%= [memcached].flatten.join(",") %>'
+
+<% end %>
+if defined?(Dalli)
+  class Dalli::Client
+    alias_method :initialize_wo_defaults, :initialize
+    def initialize(servers=nil, options = {})
+      defaults = {
+        :namespace => "<%= name %>",
+        :compression => true,
+        :expires_in => 60*60*24
+      }
+      initialize_wo_defaults(servers, defaults.merge(options))
+    end
+  end
+end

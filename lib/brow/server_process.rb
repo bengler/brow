@@ -22,7 +22,7 @@ class Brow::ServerProcess
   end
 
   def self.find_all
-    pids = `$(which ps) ax | grep 'unicorn master'`.split("\n").map{|line| line.scan(/^\s*(\d+).*#{SOCKET_NAME_PREFIX}/)}.flatten
+    pids = `$(which ps) ax | grep 'unicorn master'`.split("\n").map{|line| line.scan(/^\s*(\d+).*brow-.*-unicorn/)}.flatten
     pids.map do |pid|
       self.new(pid)
     end
@@ -68,32 +68,51 @@ class Brow::ServerProcess
     "/tmp/#{SOCKET_NAME_PREFIX}#{name}.sock"
   end
 
-  def self.launch(pwd)
-    service_name = File.basename(pwd)
+  def self.service_name(pwd)
+    File.basename(pwd)
+  end
 
-    unicorn_options = {:pwd => pwd}
+  def self.generate_unicorn_config(pwd, file_name)
+    options = {
+      :pwd => pwd, 
+      :socket => socket_for_service(service_name(pwd)),
+      :pidfile => "/tmp/brow-#{service_name(pwd)}.pid"
+    }
 
     config_path = File.join(pwd, ".brow")
     if File.exist?(config_path)
       config = YAML.load(File.open(config_path)) || {}
       if (workers = config['workers'])
-        unicorn_options[:workers] = workers.to_i
+        options[:workers] = workers.to_i
       end
     end
-
-    unicorn = Brow::UnicornConfig.new(unicorn_options)
-
-    config_file_name = "/tmp/brow-#{service_name}-unicorn.config.rb"
-    File.open(config_file_name, 'w') do |f|
-      f.write(unicorn.generate) 
+    
+    File.open(file_name, 'w') do |f|
+      f.write(Brow::UnicornConfig.generate(options)) 
     end
+  end
 
-    socket = socket_for_service(File.basename(pwd))
+  def self.generate_site_config(pwd, file_name)
+    env = "development"
+    name = service_name(pwd)
+    memcached = nil
+    File.open(file_name, 'w') do |f|
+      f.write(ERB.new(File.read("#{HOME}/lib/brow/templates/site.rb.erb")).result(binding))
+    end
+  end
+
+  def self.launch(pwd)
+    service_name = service_name(pwd)
+    config_file_name = "/tmp/brow-#{service_name(pwd)}-unicorn.config.rb"
+
+    generate_unicorn_config(pwd, config_file_name)
+    generate_site_config(pwd, "#{pwd}/config/site.rb")
 
     result = Brow::ShellEnvironment.exec(
-      "BUNDLE_GEMFILE=#{pwd}/Gemfile bundle exec unicorn -D -l #{socket} --config-file #{config_file_name} config.ru", pwd)
+      "BUNDLE_GEMFILE=#{pwd}/Gemfile bundle exec unicorn -D --config-file #{config_file_name} config.ru", pwd)
     puts result unless result.empty?
-    socket
+
+    socket_for_service(service_name(pwd))
   end
 
 end

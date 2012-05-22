@@ -1,3 +1,6 @@
+HOME = File.expand_path(File.dirname(__FILE__)+"/..")
+
+require 'erb'
 require "brow/version"
 require "brow/server_process"
 require "brow/app_manager"
