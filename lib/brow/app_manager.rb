@@ -5,8 +5,6 @@ require 'timeout'
 class Brow::AppManager
   attr_reader :root
 
-  SOCKET_PREFIX = "brow-service"
-
   def initialize(root = nil)
     @root = (root || ENV['HOME']+"/.brow").chomp("\n")    
   end

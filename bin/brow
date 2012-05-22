@@ -61,7 +61,7 @@ module Brow
       if service
         services = [service]
       else
-        services = wrangler.app_manager.applications
+        services = wrangler.app_manager.applications.keys
       end
       grepregexp = services.join('\|')
       puts "Tailing logs for #{services.join(', ')}"

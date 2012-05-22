@@ -5,7 +5,7 @@ worker_processes <%= workers %>
 timeout 60
 preload_app true
 
-require "<%= appdir %>/config/site.rb"
+require File.realdirpath("<%= appdir %>/config/site.rb")
 logger LOGGER
 
 before_fork do |server, worker|
