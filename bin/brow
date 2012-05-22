@@ -55,6 +55,20 @@ module Brow
       say "  nginx #{wrangler.proxy.running? ? '(up)' : '(down)'}"
     end
 
+    desc "log [SERVICE]", "Tail one or all logs"
+    def log(service = nil)
+      services = nil
+      if service
+        services = [service]
+      else
+        services = wrangler.app_manager.applications
+      end
+      grepregexp = services.join('\|')
+      puts "Tailing logs for #{services.join(', ')}"
+      puts "tail -f /var/log/system.log | grep \"#{grepregexp}\""
+      Kernel.exec("tail -f /var/log/system.log | grep \"#{grepregexp}\"")
+    end
+
     desc "exec COMMAND", "Execute a shell command in all mounted apps and pebbles"
     method_options :command => :array
     def exec(*command)

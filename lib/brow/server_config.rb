@@ -7,9 +7,13 @@ class Brow::ServerConfig
     @pwd = pwd.chomp('/')
     config = load_config
     @name = File.basename(pwd)
-    @socket = "/tmp/#{SOCKET_NAME_PREFIX}#{@name}.sock"
+    @socket = self.class.socket_for_service(@name)
     @pidfile = "/tmp/brow-#{@name}.pid"
     @workers = config['workers'] || 4
+  end
+
+  def self.socket_for_service(name)
+    "/tmp/#{SOCKET_NAME_PREFIX}#{name}.sock"
   end
 
   def load_config    

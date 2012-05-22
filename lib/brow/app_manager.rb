@@ -98,7 +98,7 @@ class Brow::AppManager
   end
 
   def socket_for(name)
-    Brow::ServerProcess.socket_for_service(name)
+    Brow::ServerConfig.socket_for_service(name)
   end
 
   def sockets
