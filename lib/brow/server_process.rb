@@ -54,7 +54,7 @@ class Brow::ServerProcess
     if proc = find_by_name(name)
       `kill -s USR2 #{proc.pid}`
       sleep 0.5
-      Timeout::timeout(5) do        
+      Timeout::timeout(5) do
         sleep 0.5 until kill_old_unicorns == 0
       end
       return true

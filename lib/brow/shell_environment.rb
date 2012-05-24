@@ -2,12 +2,12 @@
 
 module Brow::ShellEnvironment
 
-  # Execute a command in an environment that strive to 
+  # Execute a command in an environment that strive to
   # support bundler, rbenv and perhaps even rvm
   def self.exec(commands, dir = ENV['HOME'])
     if File.exist?(File.join(ENV['HOME'], '.rbenv'))
       dir = "#{dir}/" unless dir =~ /\/$/
-      ENV['RBENV_DIR'] = dir 
+      ENV['RBENV_DIR'] = dir
     end
     cmdline = []
     if File.exist?(File.join(dir, '.rvmrc'))

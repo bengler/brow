@@ -5,7 +5,7 @@ class Brow::NginxConfig
   def initialize
     @apps = {}
   end
-  
+
   def declare_application(name, config, options = {})
     raise "Must specify socket" unless config[:socket]
     puts "Warning: No pwd supplied for app #{name}" unless config[:pwd]
@@ -15,7 +15,7 @@ class Brow::NginxConfig
     end
   end
 
-  def preamble    
+  def preamble
     """
     worker_processes 4;
     pid /tmp/brow-nginx.pid;
@@ -30,8 +30,8 @@ class Brow::NginxConfig
   end
 
   def generate
-    result = preamble   
-    result << """    
+    result = preamble
+    result << """
     http {
       sendfile on;
       tcp_nopush on;
@@ -108,13 +108,13 @@ class Brow::NginxConfig
     result << """
       ssi on;
       ssi_value_length 1024;
-      
+
       location ~* \.(css|gif|ico|jpeg|jpg|png)$ {
         try_files $uri @unicorn;
         expires 10m;
       }
 
-      location / {        
+      location / {
         try_files $uri @unicorn;
       }
 
@@ -134,7 +134,7 @@ class Brow::NginxConfig
   def locate_mime_types
     case `uname`
     when /^Darwin/
-      case `which nginx` 
+      case `which nginx`
       when /^\/opt/
         files = `port contents nginx`.split("\n").map(&:strip)
       when /^\/usr/
@@ -144,7 +144,7 @@ class Brow::NginxConfig
         exit 1
       end
     else
-      case `which nginx` 
+      case `which nginx`
       when /^\/usr/
         files = `dpkg -L nginx`.split("\n")
         files += `dpkg -L nginx-common`.split("\n")   # for versions from ppa:nginx/stable

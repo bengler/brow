@@ -6,7 +6,7 @@ class Brow::AppManager
   attr_reader :root
 
   def initialize(root = nil)
-    @root = (root || ENV['HOME']+"/.brow").chomp("\n")    
+    @root = (root || ENV['HOME']+"/.brow").chomp("\n")
   end
 
   def servers
@@ -63,7 +63,7 @@ class Brow::AppManager
 
   def launch_all
     (application_names-running).each do |name|
-      launch(name)      
+      launch(name)
     end
   end
 

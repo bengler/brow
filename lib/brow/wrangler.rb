@@ -34,7 +34,7 @@ class Brow::Wrangler
         puts @proxy.last_validation_output
         exit 1
       end
-      @proxy.start 
+      @proxy.start
     else
       puts "Nginx allready running, reloading config."
       @proxy.reload
@@ -42,7 +42,7 @@ class Brow::Wrangler
 
     puts "Updating /etc/hosts"
     Brow::HostsFile.update(@app_manager.application_names)
-    
+
     puts "Done. Stand by for headcount."
     assert_all_apps_running
     assert_nginx_running
@@ -112,7 +112,7 @@ class Brow::Wrangler
       return true
     rescue Timeout::Error
       missing = application_names - @app_manager.running
-      puts "Warning: #{missing.join(', ')} has failed to launch." 
+      puts "Warning: #{missing.join(', ')} has failed to launch."
       exit 1
     end
   end
@@ -128,7 +128,7 @@ class Brow::Wrangler
 
   def ensure_folder_exists(folder)
     unless File.directory?(folder)
-      Dir.mkdir(folder) 
+      Dir.mkdir(folder)
     end
   end
 end

@@ -16,8 +16,8 @@ class Brow::ServerConfig
     "/tmp/#{SOCKET_NAME_PREFIX}#{name}.sock"
   end
 
-  def load_config    
-    config_path = File.join(@pwd, ".brow")    
+  def load_config
+    config_path = File.join(@pwd, ".brow")
     return {} unless File.exist?(config_path)
     YAML.load(File.open(config_path)) || {}
   end
@@ -39,9 +39,9 @@ class Brow::ServerConfig
     "/tmp/brow-#{@name}-unicorn.config.rb"
   end
 
-  def save_unicorn_config    
+  def save_unicorn_config
     File.open(unicorn_config_file_name, 'w') do |f|
-      f.write(unicorn_config) 
+      f.write(unicorn_config)
     end
   end
 
