@@ -45,6 +45,15 @@ class Brow::ServerConfig
     end
   end
 
+  def ignore_site_config
+    git = Brow::Gitignore.new(@pwd)
+    unless git.ignored?('config/site.rb')
+      puts "Adding config/site.rb to .gitignore file"
+      git.ignore('config/site.rb')
+      git.write
+    end
+  end
+
   def site_config_file_name
     "#{@pwd}/config/site.rb"
   end
@@ -69,6 +78,7 @@ class Brow::ServerConfig
 
   def launch
     save_configs
+    ignore_site_config
     result = Brow::ShellEnvironment.exec(
       "BUNDLE_GEMFILE=#{@pwd}/Gemfile bundle exec unicorn -D --config-file #{unicorn_config_file_name} config.ru", @pwd)
     puts result unless result.empty?
