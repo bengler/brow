@@ -20,7 +20,6 @@ class Brow::NginxConfig
     worker_processes 4;
     pid /tmp/brow-nginx.pid;
     working_directory /tmp;
-    error_log /tmp/brow-nginx-error.log crit;
 
     events {
       worker_connections 1024;
@@ -91,11 +90,10 @@ class Brow::NginxConfig
       server_name #{vhost_name};
     """
 
-    # Logging and public folder
+    # Public folder
     if pwd = @apps[name][:pwd]
       result << """
         root #{pwd}/public; # path to static files
-        access_log #{pwd}/log/nginx-access.log;
       """
     end
 
