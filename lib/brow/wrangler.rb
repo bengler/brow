@@ -14,7 +14,16 @@ class Brow::Wrangler
     ensure_folder_exists(ROOT_PATH)
   end
 
+  def conflicting_resolver?
+    File.exists?('/etc/resolver/dev')
+  end
+
   def up
+    if conflicting_resolver?
+      puts "WARNING: Delete the file at '/etc/resolver/dev' before you continue."
+      return
+    end
+
     puts "Releasing all unicorns ..."
     @app_manager.launch_all
 
