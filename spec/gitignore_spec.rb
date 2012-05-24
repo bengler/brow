@@ -6,7 +6,6 @@ describe Brow::Gitignore do
 
   context "when not ignored" do
     specify { subject.ignored?('somethingvisible').should be_false }
-    specify { subject.ignored?('partial').should be_false }
 
     it "ignores it" do
       subject.ignore('somethingvisible')
@@ -20,13 +19,15 @@ describe Brow::Gitignore do
 
   context "when ignored" do
 
-    specify { subject.ignored?('stuff').should be_true }
+    specify { subject.ignored?('ignoredstuff').should be_true }
     specify { subject.ignored?('ignorablestuff').should be_true }
+    specify { subject.ignored?('path/to/ignorablestuff').should be_true }
+    specify { subject.ignored?('lastthing').should be_true }
 
     it "doesn't add it again" do
       was_ignored = subject.ignored.dup
-      subject.ignore('stuff')
-      was_ignored.should eq(subject.ignored)
+      subject.ignore('ignoredstuff')
+      subject.ignored.should eq(was_ignored)
     end
   end
 

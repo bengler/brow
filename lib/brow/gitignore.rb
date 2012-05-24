@@ -8,7 +8,7 @@ class Brow::Gitignore
   end
 
   def ignored?(file)
-    ignored.any? {|line| line =~ /^[^#].*#{file}\b/ }
+    ignored.any? {|line| line =~ /#{file}$/ && !line.start_with?('#')}
   end
 
   def ignore(file)
