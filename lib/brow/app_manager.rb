@@ -73,7 +73,18 @@ class Brow::AppManager
 
   def launch(name)
     puts "  + #{name}"
+    ensure_log_dir(name)
     Brow::ServerProcess.launch(applications[name].root)
+  end
+
+  def ensure_log_dir(name)
+    unless File.exists?(log_dir(name))
+      FileUtils.mkdir_p(log_dir(name))
+    end
+  end
+
+  def log_dir(name)
+    applications[name].root + "/log"
   end
 
   def kill(name)
