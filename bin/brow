@@ -10,6 +10,7 @@ module Brow
     default_task :help    
 
     map 'status' => 'list'
+    map 'watch' => 'log'
 
     desc "up", "Launch services"
     def up
@@ -78,14 +79,6 @@ module Brow
         Brow::ShellEnvironment.exec("#{command} 1>&2", dir)
         puts
       end
-    end
-
-    desc "watch", "Watch all mounted apps for changes and reloading on demand"
-    def watch
-      # Tail stderr for all apps
-      Thread.new { `tail -c 0 -f /tmp/brow-*.stderr.log 1>&2`}
-      # ... then watch for changes in the file system
-      wrangler.watch
     end
 
     private

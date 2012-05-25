@@ -86,10 +86,6 @@ class Brow::Wrangler
     end
   end
 
-  def watch
-    Brow::Watcher.new(Brow::AppManager.new).start
-  end
-
   def assert_all_apps_stopped(application_names = nil)
     application_names ||= @app_manager.application_names
     begin

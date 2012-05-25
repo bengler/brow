@@ -52,11 +52,12 @@ To execute a command in all repos, do:
 
     brow exec bundle install
 
-To watch all repositories for changes and automatically reload relevant apps, do:
+To tail all logs:
 
-    brow watch
+    brow log
 
 ## Pebbles?!
 
 This is not the time nor place to describe the details of the pebbles spec, suffice it to say that each pebble is 
 proxied into the url space of every app at /api/[service-name]
+
