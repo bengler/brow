@@ -81,6 +81,16 @@ module Brow
       end
     end
 
+    desc "dir SERVICE", "Returns the home directory of the given service: echo 'function cb { echo \"$(brow dir $1)\";}' >> ~/.bash_profile"
+    def dir(service)
+      app = wrangler.find(service)
+      unless app
+        STDERR.puts "#{service}, who?"
+      else
+        puts File.realpath(app.root)
+      end
+    end
+
     desc "update SERVICE", "Ensure that SERVICE is up to date (default is all)"
     def update(service = 'all')
       apps = []
@@ -116,4 +126,5 @@ module Brow
 
   end
 end
+
 Brow::CLI.start
