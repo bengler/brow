@@ -1,3 +1,4 @@
+# encoding: utf-8
 # Discover configuration and manage web servers
 
 require 'timeout'
@@ -7,6 +8,10 @@ class Brow::AppManager
 
   def initialize(root = nil)
     @root = (root || ENV['HOME']+"/.brow").chomp("\n")
+  end
+
+  def find(name)
+    applications[name]
   end
 
   def servers

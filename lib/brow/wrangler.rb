@@ -10,6 +10,14 @@ class Brow::Wrangler
     @proxy = Brow::Proxy.new(@app_manager)
   end
 
+  def applications
+    @app_manager.applications
+  end
+
+  def find(app)
+    @app_manager.find(app)
+  end
+
   def ensure_brow_folders
     ensure_folder_exists(ROOT_PATH)
   end

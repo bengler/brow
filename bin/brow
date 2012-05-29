@@ -81,6 +81,29 @@ module Brow
       end
     end
 
+    desc "update SERVICE", "Ensure that SERVICE is up to date (default is all)"
+    def update(service = 'all')
+      apps = []
+      if service == 'all'
+        apps += wrangler.applications.values
+      else
+        apps << wrangler.find(service)
+      end
+
+      results = []
+      apps.each do |app|
+        puts "** #{app.name}"
+        output = app.update do |question|
+          yes?(question)
+        end
+
+        output.split("\n").each do |line|
+          puts line
+        end
+        puts
+      end
+    end
+
     private
 
     def wrangler
