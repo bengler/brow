@@ -17,6 +17,11 @@ module Brow
       wrangler.up
     end
 
+    desc "banana", "A fruit or berry"
+    def banana
+      puts Brow::ShellEnvironment.exec("bundle exec \"rake -T\"", "/Users/simenss/.brow/pebbles/bandwagon")
+    end
+
     desc "down", "Shut down services"
     def down
       wrangler.down

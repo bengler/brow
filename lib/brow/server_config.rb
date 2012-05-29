@@ -62,7 +62,7 @@ class Brow::ServerConfig
     env = "development"
     name = @name
     memcached = nil
-    template('site.rb.erb').result(binding)
+    template('site.rb.erb').result(binding) + template('site_addendum.rb.erb').result(binding)    
   end
 
   def save_site_config
