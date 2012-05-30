@@ -11,6 +11,7 @@ module Brow
 
     map 'status' => 'list'
     map 'watch' => 'log'
+    map 'smash' => 'wipe'
 
     desc "up", "Launch services"
     def up
@@ -111,6 +112,16 @@ module Brow
           puts line
         end
         puts
+      end
+    end
+
+    desc "wipe", "Kill all unicorn, nginx and brow processes the brutal way."
+    def wipe
+      ["unicorn", "nginx", "brow"].each do |process_name|
+        command = "sudo kill -9 `ps aux|grep #{process_name}|awk '{print $2}'`"
+        puts command
+        `#{command}`
+        puts ""
       end
     end
 
