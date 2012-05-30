@@ -10,6 +10,7 @@ module Brow
     default_task :help    
 
     map 'status' => 'list'
+    map 'smash' => 'wipe'
 
     desc "up", "Launch services"
     def up
@@ -72,6 +73,16 @@ module Brow
       Thread.new { `tail -c 0 -f /tmp/brow-*.stderr.log 1>&2`}
       # ... then watch for changes in the file system
       wrangler.watch
+    end
+
+    desc "wipe", "Kill all unicorn, nginx and brow processes the brutal way."
+    def wipe
+      ["unicorn", "nginx", "brow"].each do |process_name|
+        command = "sudo kill -9 `ps aux|grep #{process_name}|awk '{print $2}'`"
+        puts command
+        `#{command}`
+        puts ""
+      end
     end
 
     private
