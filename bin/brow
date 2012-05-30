@@ -81,7 +81,7 @@ module Brow
       end
     end
 
-    desc "dir SERVICE", "Returns the home directory of the given service: echo 'function cb { echo \"$(brow dir $1)\";}' >> ~/.bash_profile"
+    desc "dir SERVICE", "Returns the home directory of the given service: echo 'function cb { cd \"$(brow dir $1)\";}' >> ~/.bash_profile"
     def dir(service)
       app = wrangler.find(service)
       unless app
