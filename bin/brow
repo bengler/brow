@@ -115,6 +115,11 @@ module Brow
       end
     end
 
+    desc "dependencies", "Returns list of dependencies for a service"
+    def dependencies(service)
+      wrangler.app_manager.dependencies(service)
+    end
+
     desc "wipe", "Kill all unicorn, nginx and brow processes the brutal way."
     def wipe
       ["unicorn", "nginx", "brow"].each do |process_name|

@@ -108,6 +108,14 @@ class Brow::AppManager
     running.map{|name| socket_for(name)}
   end
 
+  def dependencies(name)
+    application = find(name)
+    raise ArgumentError, "\"#{name}\" is not a known pebble. Is it in your .brow folder?" unless application
+    PebbleFile.dependencies(application.root) do |service_name|
+      find(service_name).root
+    end
+  end
+
   private
 
   def handle_duplicate_app_name_error(app1, app2)

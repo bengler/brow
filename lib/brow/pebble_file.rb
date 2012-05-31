@@ -1,46 +1,48 @@
+require 'pathname'
+
 class PebbleFile
 
-  attr_reader :pebbles
+  attr_accessor :pebbles
 
   def initialize
-    @pebbles = []
+    @pebbles = {}
   end
 
   def load(file_name)
-    raise ArgumentError, "Please verify that #{name} exists and call me back." unless File.basename(file_name)
-    @pebbles = DSL.load(file_name).pebbles
+    DSL.load(file_name, self)
+  end
+
+
+  def self.dependencies(root_path, &block)
+    service_name = Pathname.new(root_path).basename.to_s
+
+    path = yield(service_name)
+
+    pebble_file = PebbleFile.new
+    DSL.load(path, pebble_file)
+    return pebble_file.pebbles.keys
   end
 
 
   class DSL
 
-    attr_reader :pebbles
-
-    def initialize
-      @pebbles = []
+    def initialize(pebble_file)
+      @pebble_file = pebble_file
     end
 
-    def self.load(file_name)
-      dsl = DSL.new
+    def self.load(file_name, pebble_file)
+      pathname = Pathname.new(file_name)
+      pathname = pathname + "Pebblefile" unless pathname.basename == "Pebblefile"
+      file_name = pathname.to_s
+      raise ArgumentError, "Please verify that #{file_name} exists" unless File.basename(file_name)
+
+      dsl = DSL.new(pebble_file)
       dsl.instance_eval(File.read(file_name), file_name)
-      dsl
+      nil
     end
 
     def pebble(name, options = {})
-      @pebbles << PebbleDeclaration.new(name, options)
-    end
-
-  end
-
-
-  class PebbleDeclaration
-
-    attr_reader :name
-    attr_reader :options
-
-    def initialize(name, options)
-      @name = name
-      @options = options
+      @pebble_file.pebbles[name] = options
     end
 
   end
