@@ -22,6 +22,12 @@ class Brow::ServerConfig
     YAML.load(File.open(config_path)) || {}
   end
 
+  def load_database_config
+    database_config_path = File.join(@pwd, "/config/database.yml")
+    return {} unless File.exist?(database_config_path)
+    YAML.load(File.open(database_config_path)) || {}
+  end
+
   def template(name)
     ERB.new(File.read("#{HOME}/lib/brow/templates/#{name}"), nil, '-') # <- '-' specifies trim mode
   end
@@ -60,8 +66,15 @@ class Brow::ServerConfig
 
   def site_config
     env = "development"
+
+    # Retrieve database config
+    dbconfig = load_database_config
+    dbname = nil
+    dbname = dbconfig[env]['database'] if dbconfig[env]
+
     name = @name
     memcached = nil
+    
     template('site.rb.erb').result(binding) + template('site_addendum.rb.erb').result(binding)    
   end
 
