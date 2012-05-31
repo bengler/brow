@@ -120,13 +120,19 @@ module Brow
       wrangler.app_manager.dependencies(service)
     end
 
-    desc "wipe", "Kill all unicorn, nginx and brow processes the brutal way."
+    # TODO: the running brow process is itself killed, is this a problem?
+    desc "wipe", "Send kill -9 to all unicorn, nginx and brow processes."
     def wipe
+      puts "Sending kill -9 to all unicorn, nginx and brow processes..."
       ["unicorn", "nginx", "brow"].each do |process_name|
-        command = "sudo kill -9 `ps aux|grep #{process_name}|awk '{print $2}'`"
-        puts command
-        `#{command}`
-        puts ""
+        puts process_name
+        process_name[0] = "[#{process_name[0]}]" # making the grep process invisible
+        kill_command = "sudo kill -9 `ps aux | grep '#{process_name}'|awk '{print $2}'`"
+        `#{kill_command}`
+        sleep 4
+        unless `ps aux | grep '#{process_name}'`.length < 1
+          puts "  ...is still hanging around :-("
+        end
       end
     end
 
