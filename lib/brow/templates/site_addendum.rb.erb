@@ -2,26 +2,34 @@
 # custom code should reside there. This file is appended to site.rb and should 
 # contain all hacks^H^H^H^H^Hconfig specific to the development environment.
 
-# A beaoooootifol hack to add a Sinatra::Reloader to any and all sinatra-apps
-# created in this environment. It works by hooking the inherited-event on the
-# Sinatra::Base class as the reloader has to be registerd before any routes
-# are added.
-# This hack is triggered whenever the sinatra-contrib-gem is part of the bundle.
-if Bundler.setup.gems['sinatra-contrib'].any?
-  Sinatra::Base.class_eval do
-    class << self
-      alias original_inherited inherited
-      def inherited(klass)
-        LOGGER.info("Attaching sinatra/reloader to #{klass.name}")
-        original_inherited(klass)        
-        klass.class_eval do
-          configure :development do            
-            register Sinatra::Reloader
-            also_reload "api/**/*.rb"
-            also_reload "lib/**/*.rb"
+if not defined?(SITE_ADDENDUM_LOADED)
+  SITE_ADDENDUM_LOADED = true
+
+  # A beaoooootifol hack to add a Sinatra::Reloader to any and all sinatra-apps
+  # created in this environment. It works by hooking the inherited-event on the
+  # Sinatra::Base class as the reloader has to be registerd before any routes
+  # are added.
+  # This hack is triggered whenever the sinatra-contrib-gem is part of the bundle.
+  if Bundler.setup.gems['sinatra-contrib'].any?
+    LOGGER.fatal("Registering reloader")
+    Sinatra::Base.class_eval do
+      class << self
+        LOGGER.fatal("Aliasing")
+        alias original_inherited inherited
+        def inherited(klass)
+          LOGGER.fatal("Attaching sinatra/reloader to #{klass.name}")
+          original_inherited(klass)        
+          LOGGER.fatal("done with the default stuff, configuring reloader")
+          klass.class_eval do
+            configure :development do            
+              register Sinatra::Reloader
+              also_reload "api/**/*.rb"
+              also_reload "lib/**/*.rb"
+            end
           end
         end
       end
     end
   end
+
 end
