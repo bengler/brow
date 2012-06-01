@@ -117,14 +117,13 @@ module Brow
 
     desc "dependencies", "Returns list of dependencies for a service"
     def dependencies(service)
-      wrangler.app_manager.dependencies(service)
+      puts wrangler.app_manager.dependencies(service)
     end
 
-    # TODO: the running brow process is itself killed, is this a problem?
-    desc "wipe", "Send kill -9 to all unicorn, nginx and brow processes."
+    desc "wipe", "Send kill -9 to all unicorn and nginx processes."
     def wipe
-      puts "Sending kill -9 to all unicorn, nginx and brow processes..."
-      ["unicorn", "nginx", "brow"].each do |process_name|
+      puts "Sending kill -9 to all unicorn and nginx processes..."
+      ["unicorn", "nginx"].each do |process_name|
         puts process_name
         process_name[0] = "[#{process_name[0]}]" # making the grep process invisible
         kill_command = "sudo kill -9 `ps aux | grep '#{process_name}'|awk '{print $2}'`"
