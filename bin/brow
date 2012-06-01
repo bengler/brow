@@ -117,7 +117,7 @@ module Brow
 
     desc "dependencies", "Returns list of dependencies for a service"
     def dependencies(service)
-      puts wrangler.app_manager.dependencies(service)
+      wrangler.app_manager.dependencies(service)
     end
 
     desc "wipe", "Send kill -9 to all unicorn and nginx processes."

@@ -110,8 +110,8 @@ class Brow::AppManager
 
   def dependencies(name)
     application = find(name)
-    raise ArgumentError, "\"#{name}\" is not a known pebble. Is it in your .brow folder?" unless application
-    PebbleFile.dependencies(application.root) do |service_name|
+    raise StandardError, "Uknown application: #{name}" unless application
+    PebbleFile.dependencies(application.root, []) do |service_name|
       find(service_name).root
     end
   end
