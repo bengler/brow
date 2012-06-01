@@ -190,7 +190,6 @@ module Brow
       end
     end
 
->>>>>>> Further progress on nginx w/haproxy
     private
 
     def wrangler
