@@ -135,6 +135,15 @@ module Brow
       end
     end
 
+    desc "import", "Import latest database dump from backup server"
+    method_option :host, :type => :string, :default => ENV['DB_BACKUP_HOST'], :aliases => '-h', :desc => "Which server to fetch backup files from."
+    method_option :backup_server, :type => :string, :default => ENV['DB_BACKUP_SERVER'], :aliases => '-s', :desc => "Where were the backups originally put?"
+    method_option :name, :type => :string, :aliases => '-n', :desc => "Which service db to fetch."
+    def import
+      say "This will *WIPE* your local #{options[:name]} database and replace it with latest production dump."
+      return unless yes? "Are you sure you want to continue? [yN]"
+      Brow::DB.new(options).import
+    end
     private
 
     def wrangler
