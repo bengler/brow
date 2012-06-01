@@ -1,0 +1,5 @@
+<% [route].flatten.each do |r| -%>
+  acl <%= name %>-route path_beg <%= r %>
+<% end -%>
+  use_backend <%= name %> if <%= name %>-route
+

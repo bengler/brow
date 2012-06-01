@@ -11,15 +11,12 @@ if not defined?(SITE_ADDENDUM_LOADED)
   # are added.
   # This hack is triggered whenever the sinatra-contrib-gem is part of the bundle.
   if Bundler.setup.gems['sinatra-contrib'].any?
-    LOGGER.fatal("Registering reloader")
+    LOGGER.info("Attaching Sinatra::Reloader Autoplay")
     Sinatra::Base.class_eval do
       class << self
-        LOGGER.fatal("Aliasing")
         alias original_inherited inherited
         def inherited(klass)
-          LOGGER.fatal("Attaching sinatra/reloader to #{klass.name}")
           original_inherited(klass)        
-          LOGGER.fatal("done with the default stuff, configuring reloader")
           klass.class_eval do
             configure :development do            
               register Sinatra::Reloader

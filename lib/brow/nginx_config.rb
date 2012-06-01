@@ -1,158 +1,71 @@
-# Writes the nginx config files
-
 class Brow::NginxConfig
+  NGINX_CONFIG_FILE = "/tmp/brow/nginx/nginx.conf"
+  NGINX_INCLUDE_PATH = "/tmp/brow/nginx/include"
+  NGINX_PORT = 8000
+
+  attr :apps
 
   def initialize
     @apps = {}
+    @next_port = 8000
+
   end
 
   def declare_application(name, config, options = {})
     raise "Must specify socket" unless config[:socket]
     puts "Warning: No pwd supplied for app #{name}" unless config[:pwd]
-    @apps[name] = config
-    if options[:default]
-      @default_application_name = name
-    end
-  end
-
-  def preamble
-    """
-    worker_processes 4;
-    pid /tmp/brow-nginx.pid;
-    working_directory /tmp;
-
-    events {
-      worker_connections 1024;
-    }
-
-    """
+    @apps[name] = config    
+    @default_application_name = name if options[:default]
   end
 
   def generate
-    result = preamble
-    result << """
-    http {
-      sendfile on;
-      tcp_nopush on;
-      tcp_nodelay on;
-      keepalive_timeout 60;
-      include #{locate_mime_types};
-      default_type text/plain;
-      charset utf-8;
-      gzip off;
-      client_body_temp_path /tmp/client_body_temp;
-      proxy_temp_path /tmp/proxy_temp;
-      fastcgi_temp_path /tmp/fastcgi_temp;
-      uwsgi_temp_path /tmp/uwsgi_temp;
-      scgi_temp_path /tmp/scgi_temp;
-
-      #{upstream}
-
-      #{@apps.keys.map do |name|
-        server(name)
-      end.join("\n")}
-    "
-    if @default_application_name
-      result << server(@default_application_name, '*.dev')
-    end
-    result << "\n}"
-    result
-  end
-
-  def upstream
-    @apps.map do |name, options|
-      """
-      upstream #{name} {
-        server unix:#{options[:socket]} fail_timeout=30;
-      }
-      """
-    end.join("\n")
-  end
-
-  def pebble_location(pebble_name)
-    """
-    location /api/#{pebble_name} {
-      ssi on;
-      ssi_value_length 1024;
-      proxy_pass http://#{pebble_name};
-      proxy_set_header X-Forwarded-Host $host;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-    """
-  end
-
-  def server(name, vhost_name = nil)
-    vhost_name ||= "#{name}.dev"
-    socket = @apps[name]
-    result = """
-      listen 80;
-      client_max_body_size 20M;
-      server_name #{vhost_name};
-    """
-
-    # Public folder
-    if pwd = @apps[name][:pwd]
-      result << """
-        root #{pwd}/public; # path to static files
-      """
+    puts "Creating dirs (as #{ENV['USER']}"
+    ['/tmp/brow', '/tmp/brow/nginx', '/tmp/brow/nginx/include'].each do |dir|
+      Dir.mkdir(dir) unless File.exists?(dir)
     end
 
-    # Proxy forwarding to all other apps
-    (@apps.keys - [name]).each do |name|
-      result << pebble_location(name)
+    puts "Writing main nginx config"
+    File.open(NGINX_CONFIG_FILE, 'w') do |f|
+      f.write(main_config)
     end
-
-    # The actual app
-    result << """
-      ssi on;
-      ssi_value_length 1024;
-
-      location ~* \.(css|gif|ico|jpeg|jpg|png)$ {
-        try_files $uri @unicorn;
-        expires 10m;
-      }
-
-      location / {
-        try_files $uri @unicorn;
-      }
-
-      location @unicorn {
-        proxy_set_header Host $http_host;
-        proxy_pass http://#{name};
-      }
-    """
-
-    """
-    server {
-      #{result}
-    }
-    """
-  end
-
-  def locate_mime_types
-    case `uname`
-    when /^Darwin/
-      case `which nginx`
-      when /^\/opt/
-        files = `port contents nginx`.split("\n").map(&:strip)
-      when /^\/usr/
-        files = `brew list nginx`.split("\n")
-      else
-        puts "Nginx must be installed via either homebrew or macports"
-        exit 1
-      end
-    else
-      case `which nginx`
-      when /^\/usr/
-        files = `dpkg -L nginx`.split("\n")
-        files += `dpkg -L nginx-common`.split("\n")   # for versions from ppa:nginx/stable
-      else
-        puts "Nginx must be installed via either dpkg"
-        exit 1
+    @apps.keys.each do |appname|
+      puts "Writing vhost-config for #{appname}"
+      File.open(File.join(NGINX_INCLUDE_PATH, "#{appname}.conf"), 'w') do |f|
+        f.write(vhost_config(appname, @apps[appname]))
       end
     end
-    file = files.find{ |file| file =~ /mime.types$/ }
-    file ||= files.find{ |file| file =~ /mime.types.example$/ }
+  end
+
+  def main_config
+    user = 'nobody'
+    errorlog = "/dev/null"
+    pidfile = "/tmp/brow/nginx.pid"
+    accesslog = "/dev/null"
+    fqdn = `hostname`.chomp
+    mimetypes = File.expand_path(File.join(File.dirname(__FILE__), 'templates/mime.types'))
+    includepath = "/tmp/brow/nginx/include/*"
+    template('nginx.conf.erb').result(binding) # <-- binding!
+  end
+
+  def vhost_config(appname, options)
+    unicorn = options[:socket]
+    port = NGINX_PORT
+    name = appname
+    documentroot = File.join(options[:pwd], '/public')
+    accesslog = "/tmp/nginx_access.log" #"/dev/null"
+    errorlog = "/tmp/nginx_error.log" #"/dev/null"
+    ssi = true
+    redirect = ''
+    publicexpires = '5s'
+    htpasswd = false
+    config = ''
+    aliases = []
+    maxupload = ''
+    template('vhost.conf.erb').result(binding) # <-- binding!
+  end
+
+  def template(name)
+    ERB.new(File.read("#{HOME}/lib/brow/templates/#{name}"), nil, '-') # <- '-' specifies trim mode
   end
 
 end

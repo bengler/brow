@@ -3,8 +3,6 @@
 class Brow::Proxy
   attr_reader :last_validation_output
 
-  NGINX_CONFIG_FILE_LOCATION = '/tmp/brow-nginx-dummy.conf'
-
   def initialize(app_manager)
     unless `nginx -v 2>&1` =~ /version/
       puts "Please install nginx"
@@ -25,32 +23,28 @@ class Brow::Proxy
     nginx_config.generate
   end
 
-  def write_config(filename)
-    File.open(filename, 'w') {|f| f.write(generate_config) }
-  end
-
   def valid_config?
-    write_config('/tmp/brow-nginx-preflight.conf')
-    @last_validation_output = `sudo nginx -t -c /tmp/brow-nginx-preflight.conf 2>&1`
+    generate_config
+    @last_validation_output = `sudo nginx -t -c #{Brow::NginxConfig::NGINX_CONFIG_FILE} 2>&1`
     !!(@last_validation_output =~ /test is successful\n/)
   end
 
   def start
-    write_config(NGINX_CONFIG_FILE_LOCATION)
-    `sudo nginx -c #{NGINX_CONFIG_FILE_LOCATION}`
+    generate_config
+    `sudo nginx -c #{Brow::NginxConfig::NGINX_CONFIG_FILE}`
   end
 
   def reload
-    write_config(NGINX_CONFIG_FILE_LOCATION)
-    `sudo nginx -c #{NGINX_CONFIG_FILE_LOCATION} -s reload`
+    generate_config
+    `sudo nginx -c #{Brow::NginxConfig::NGINX_CONFIG_FILE} -s reload`
   end
 
   def stop
-    `sudo nginx -c #{NGINX_CONFIG_FILE_LOCATION} -s quit`
+    `sudo nginx -c #{Brow::NginxConfig::NGINX_CONFIG_FILE} -s quit`
   end
 
   def running?
-    `ps ax | grep nginx`.scan(NGINX_CONFIG_FILE_LOCATION).size > 0
+    `ps ax | grep nginx`.scan(Brow::NginxConfig::NGINX_CONFIG_FILE).size > 0
   end
 
 end

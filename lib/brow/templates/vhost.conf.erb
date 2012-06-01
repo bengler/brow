@@ -8,8 +8,8 @@ server {
   listen <%= port %>;
   server_name <%= name %><%= aliases.length > 0 ? " " + aliases.join(" ") : "" %>;
   root <%= documentroot %>;
-  access_log /var/log/nginx/<%= name %>/access.log;
-  error_log /var/log/nginx/<%= name %>/error.log warn;
+  access_log <%= accesslog %>;
+  error_log <%= errorlog %> warn;
 <% if maxupload != "" -%>
   client_max_body_size <%= maxupload %>;
 <% end -%>

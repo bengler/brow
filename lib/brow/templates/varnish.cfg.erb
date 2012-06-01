@@ -1,0 +1,7 @@
+backend varnish
+  balance uri
+<% [server].flatten.each do |s| -%>
+  server <%= s %> <%= s %>:6081 weight 100 check inter 30s fastinter 2s downinter 2s rise 1 fall 3 maxconn 500
+<% end -%>
+  option httpchk GET /-/test/varnish HTTP/1.1\r\nHost:\ o5.no
+
