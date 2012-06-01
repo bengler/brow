@@ -28,10 +28,16 @@ module Brow
       restart(name)
     end
 
-    desc "restart [SERVICE] [--hard]", "Restart a single service or toggle the whole enchilada"
+    desc "restart [SERVICE] [--hard] [--deps]", "Restart a single service, service with dependencies or the whole enchilada"
     method_options :hard => :boolean, :alias => :string
+    method_options :deps => :boolean, :alias => :string
     def restart(name = nil)
       if name
+        if options['deps']
+          dependencies(name).each do |dependency|
+            wrangler.restart(dependency, options['hard'])
+          end
+        end
         wrangler.restart(name, options['hard'])
       else
         if options['hard']
