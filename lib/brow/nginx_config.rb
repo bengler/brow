@@ -1,14 +1,15 @@
 class Brow::NginxConfig
-  NGINX_CONFIG_FILE = "/tmp/brow/nginx/nginx.conf"
-  NGINX_INCLUDE_PATH = "/tmp/brow/nginx/include"
-  NGINX_PORT = 8000
+  CONFIG_FILE = "/tmp/brow/nginx/nginx.conf"
+  INCLUDE_PATH = "/tmp/brow/nginx/include"
+  PORT = 8000
+  PID = "/tmp/brow/nginx.pid"
+  REQUIRED_MODULES = ['http_stub_status_module', 'http_gzip_static_module']
 
   attr :apps
 
   def initialize
     @apps = {}
     @next_port = 8000
-
   end
 
   def declare_application(name, config, options = {})
@@ -19,18 +20,12 @@ class Brow::NginxConfig
   end
 
   def generate
-    puts "Creating dirs (as #{ENV['USER']}"
-    ['/tmp/brow', '/tmp/brow/nginx', '/tmp/brow/nginx/include'].each do |dir|
-      Dir.mkdir(dir) unless File.exists?(dir)
-    end
-
-    puts "Writing main nginx config"
-    File.open(NGINX_CONFIG_FILE, 'w') do |f|
+    FileUtils.mkdir_p("/tmp/brow/nginx/include")
+    File.open(CONFIG_FILE, 'w') do |f|
       f.write(main_config)
     end
     @apps.keys.each do |appname|
-      puts "Writing vhost-config for #{appname}"
-      File.open(File.join(NGINX_INCLUDE_PATH, "#{appname}.conf"), 'w') do |f|
+      File.open(File.join(INCLUDE_PATH, "#{appname}.conf"), 'w') do |f|
         f.write(vhost_config(appname, @apps[appname]))
       end
     end
@@ -39,17 +34,17 @@ class Brow::NginxConfig
   def main_config
     user = 'nobody'
     errorlog = "/dev/null"
-    pidfile = "/tmp/brow/nginx.pid"
+    pidfile = PID
     accesslog = "/dev/null"
     fqdn = `hostname`.chomp
-    mimetypes = File.expand_path(File.join(File.dirname(__FILE__), 'templates/mime.types'))
+    mimetypes = File.realpath(File.join(File.dirname(__FILE__), 'templates/mime.types'))
     includepath = "/tmp/brow/nginx/include/*"
     template('nginx.conf.erb').result(binding) # <-- binding!
   end
 
   def vhost_config(appname, options)
     unicorn = options[:socket]
-    port = NGINX_PORT
+    port = PORT
     name = appname
     documentroot = File.join(options[:pwd], '/public')
     accesslog = "/tmp/nginx_access.log" #"/dev/null"

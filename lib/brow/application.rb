@@ -18,7 +18,7 @@ class Brow::Application
 
   # Discover all apps configured under the provided root folder
   def self.discover(root)
-    app_folders(root).map { |folder| Brow::Application.new(folder) }
+    app_folders(root).map { |folder| Brow::Application.new(File.realpath(folder)) }
   end
 
   def self.app_folders(root)

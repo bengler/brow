@@ -11,7 +11,7 @@ logger LOGGER
 before_fork do |server, worker|
   # Set up ping routes by wrapping app
   server.app = Rack::Builder.new {
-    ping = Proc.new {|env| [200, {"Content-Type" => "text/plain"}, ["<%= name %>"]]}
+    ping = Proc.new {|env| [200, {"Content-Type" => "text/plain"}, ["<%= name %> #{env.inspect}"]]}
     map("/") {run server.app}
     map("/api/<%= name %>/ping") {run ping}
     map("/ping") {run ping}

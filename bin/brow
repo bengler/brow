@@ -128,8 +128,8 @@ module Brow
 
     desc "wipe", "Send kill -9 to all unicorn and nginx processes."
     def wipe
-      puts "Sending kill -9 to all unicorn and nginx processes..."
-      ["unicorn", "nginx"].each do |process_name|
+      puts "Sending kill -9 to all unicorn, haproxy and nginx processes..."
+      ["unicorn", "nginx", "haproxy"].each do |process_name|
         puts process_name
         process_name[0] = "[#{process_name[0]}]" # making the grep process invisible
         kill_command = "sudo kill -9 `ps aux | grep '#{process_name}'|awk '{print $2}'`"
@@ -155,30 +155,52 @@ module Brow
     def setup
       current_nginx = `which nginx`
       if current_nginx =~ /^\/opt\//
-        puts "It seems you have nginx installed via macports."
-        if yes?("Uninstall nginx?")
-          `sudo port uninstall nginx 1>&2` 
-        else
-          exit(1)
-        end
+        puts "It seems you have nginx installed via macports. Brow may help you better if you use homebrew."
+        puts
+        puts "If you insist on using macports you will have to build your own nginx with the following"
+        puts "packages included: http_gzip_static_module, http_stub_status_module."        
+        exit(1)
       end
       if `which brew` == ''
         puts "You don't have homebrew installed."
         if yes?("Would you like to see the installation instructions?")
           `open 'https://github.com/mxcl/homebrew/wiki/installation'`
+        else
+          puts "Good luck to you, my friend!"
         end
         exit(1)
-      end      
-      if `$(which brew) list`.split(/\s+/).include?('nginx')
-        puts "You have a version of nginx installed."
-        puts `nginx -v`
-        exit(1) if no?("Uninstall?")
-        `sudo $(which brew) uninstall nginx 1>&2`
       end
-      puts "Installing custom nginx"
-      puts 
-      `$(which brew) install #{File.expand_path(File.join(HOME, 'lib/formulas/nginx.rb'))} 1>&2`
-      puts
+      install_nginx = false
+      if `$(which brew) list`.split(/\s+/).include?('nginx')
+        nginx_modules = `nginx -V 2>&1`.scan(/\b(?:with-)([a-z_]+)\s/).flatten        
+        puts "You have a version of nginx installed with the following optional modules: #{nginx_modules.join(', ')}"
+        Brow::NginxConfig::REQUIRED_MODULES.each do |mod|
+          unless nginx_modules.include?(mod)
+            puts "Missing Nginx module: #{mod}"
+            install_nginx = true
+          end
+        end
+        if install_nginx
+          if no?("Replace current nginx with brows special build?")
+            put "Have it your way, then! :-)"
+            install_nginx = false
+          else
+            `sudo $(which brew) uninstall nginx 1>&2`
+          end
+        else
+          puts "Your version of nginx seems fine to me. If it is malfunctioning, uninstall it and rerun this task."
+        end
+      else
+        install_nginx = true
+      end
+      if install_nginx
+        formula = File.expand_path(File.join(HOME, 'lib/formulas/nginx.rb'))
+        puts "Installing custom nginx based on this formula:"
+        puts "   #{formula}"
+        puts 
+        `$(which brew) install #{formula} 1>&2`
+        puts
+      end
 
       if `which haproxy` == ''
         puts "Installing haproxy"
