@@ -11,7 +11,7 @@ logger LOGGER
 before_fork do |server, worker|
   # Set up ping routes by wrapping app
   server.app = Rack::Builder.new {
-    ping = Proc.new {|env| [200, {"Content-Type" => "text/plain"}, ["<%= name %> #{env.inspect}"]]}
+    ping = Proc.new {|env| [200, {"Content-Type" => "text/plain"}, ["<%= name %>"]]}
     map("/") {run server.app}
     map("/api/<%= name %>/ping") {run ping}
     map("/ping") {run ping}
@@ -20,6 +20,7 @@ before_fork do |server, worker|
   # Close all connections before forking
   ActiveRecord::Base.connection.disconnect! if defined?(ActiveRecord::Base) and ActiveRecord::Base.connected?
   ObjectSpace.each_object(Dalli::Client){|client| client.close} if defined?(Dalli)
+  Hupper.release! if defined?(Hupper)
 
   # Kill old master, if running (to enable graceful restarts)
   oldpid = Integer(File.read("<%= pidfile %>.oldbin")) rescue nil
@@ -36,4 +37,5 @@ after_fork do |server, worker|
   ActiveRecord::Base.establish_connection(
     YAML::load_file("config/database.yml")[ENV["RACK_ENV"]]
   ) if defined?(ActiveRecord::Base) and File.exists?("config/database.yml")
+  Hupper.initialize! if defined?(Hupper)
 end
