@@ -6,14 +6,18 @@ global
     daemon
     maxconn 256
     pidfile <%= pidfile %>
-
+    log 127.0.0.1:514 local0 debug
+    log-tag haproxy
+    # Note on enabling connections on os x: http://hints.macworld.com/article.php?story=20110724103552640
 defaults
     mode http
     timeout connect 5000ms
     timeout client 50000ms
     timeout server 50000ms
+    log global
     option http-server-close
     option redispatch
+    option httplog
 
 frontend http-in
     bind *:80

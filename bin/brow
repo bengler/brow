@@ -60,7 +60,7 @@ module Brow
       wrangler.app_manager.application_names.each do |name|
         say "  #{name} #{running.include?(name) ? '(up)' : '(down)'}"
       end
-      say "  nginx #{wrangler.proxy.running? ? '(up)' : '(down)'}"
+      say "  nginx/haproxy #{wrangler.proxy.running? ? '(up)' : '(down)'}"
     end
 
     desc "log [SERVICE]", "Tail one or all logs"

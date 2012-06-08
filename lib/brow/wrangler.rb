@@ -38,7 +38,7 @@ class Brow::Wrangler
     unless @proxy.running?
       puts "Launching nginx."
       unless @proxy.valid_config?
-        puts "Won't launch Nginx because config did not validate. Nginx had this to say about that:"
+        puts "Unable to launch Nginx/Haproxy"
         puts @proxy.last_validation_output
         exit 1
       end

@@ -21,6 +21,9 @@ if not defined?(SITE_ADDENDUM_LOADED)
             configure :development do            
               register Sinatra::Reloader
               also_reload "api/**/*.rb"
+              also_reload "api/**/*.pg"
+              also_reload "api/**/*.erb"
+              also_reload "api/**/*.fu"
               also_reload "lib/**/*.rb"
             end
           end

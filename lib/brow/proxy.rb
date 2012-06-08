@@ -33,8 +33,18 @@ class Brow::Proxy
 
   def valid_config?
     generate_config    
-    nginx_ok = `nginx -t -c #{Brow::NginxConfig::CONFIG_FILE} 2>&1` =~ /test is successful/
-    haproxy_ok = `haproxy -f #{Brow::HAProxyConfig::CONFIG_FILE} 2>&1` =~ /Configuration file is valid/
+    nginx_validation = `nginx -t -c #{Brow::NginxConfig::CONFIG_FILE} 2>&1`
+    nginx_ok = nginx_validation =~ /test is successful/
+    unless nginx_ok
+      puts "Nginx config did not validate"
+      puts nginx_validation 
+    end
+    haproxy_validation = `sudo haproxy -f #{Brow::HAProxyConfig::CONFIG_FILE} -c 2>&1`
+    haproxy_ok = haproxy_validation =~ /Configuration file is valid/
+    unless haproxy_ok
+      puts "HAProxy config did not validate"
+      puts haproxy_validation 
+    end
     nginx_ok && haproxy_ok
   end
 
