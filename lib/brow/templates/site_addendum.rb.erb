@@ -11,6 +11,7 @@ if not defined?(SITE_ADDENDUM_LOADED)
   # are added.
   # This hack is triggered whenever the sinatra-contrib-gem is part of the bundle.
   if Bundler.setup.gems['sinatra-contrib'].any?
+    require 'sinatra/reloader'
     LOGGER.info("Attaching Sinatra::Reloader Autoplay")
     Sinatra::Base.class_eval do
       class << self
