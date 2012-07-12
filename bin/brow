@@ -23,14 +23,15 @@ module Brow
       wrangler.down
     end
 
-    desc "start [SERVICE]", "Starts (or restarts) a service"
+    desc "start [SERVICE] [--deps]", "Starts (or restarts) a service"
+    method_option :deps, :type => :boolean, :default => true, :desc => "Also start dependent projects"
     def start(name = nil)
-      restart(name)
+      invoke :restart, nil, options
     end
 
     desc "restart [SERVICE] [--hard] [--deps]", "Restart a single service, service with dependencies or the whole enchilada"
-    method_options :hard => :boolean, :alias => :string
-    method_options :deps => :boolean, :alias => :string
+    method_option :hard, :type => :boolean, :desc => "Non-graceful restart"
+    method_option :deps, :type => :boolean, :default => false, :desc => "Also restart dependent projects"
     def restart(name = nil)
       if name
         if options['deps']
