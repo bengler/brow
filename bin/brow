@@ -7,7 +7,7 @@ require 'brow'
 module Brow
   class CLI < Thor
     include Thor::Actions
-    default_task :help    
+    default_task :help
 
     map 'status' => 'list'
     map 'watch' => 'log'
@@ -57,7 +57,7 @@ module Brow
 
     desc "list", "Show status for all configured services"
     def list
-      running = wrangler.app_manager.running 
+      running = wrangler.app_manager.running
       wrangler.app_manager.application_names.each do |name|
         say "  #{name} #{running.include?(name) ? '(up)' : '(down)'}"
       end
@@ -142,16 +142,6 @@ module Brow
       end
     end
 
-    desc "import", "Import latest database dump from backup server"
-    method_option :host, :type => :string, :default => ENV['DB_BACKUP_HOST'], :aliases => '-h', :desc => "Which server to fetch backup files from."
-    method_option :backup_server, :type => :string, :default => ENV['DB_BACKUP_SERVER'], :aliases => '-s', :desc => "Where were the backups originally put?"
-    method_option :name, :type => :string, :aliases => '-n', :desc => "Which service db to fetch."
-    def import
-      say "This will *WIPE* your local #{options[:name]} database and replace it with latest production dump."
-      return unless yes? "Are you sure you want to continue? [yN]"
-      Brow::DB.new(options).import
-    end
-
     desc "setup", "Install nginx and haproxy the way brow likes it"
     def setup
       current_nginx = `which nginx`
@@ -159,7 +149,7 @@ module Brow
         puts "It seems you have nginx installed via macports. Brow may help you better if you use homebrew."
         puts
         puts "If you insist on using macports you will have to build your own nginx with the following"
-        puts "packages included: http_gzip_static_module, http_stub_status_module."        
+        puts "packages included: http_gzip_static_module, http_stub_status_module."
         exit(1)
       end
       if `which brew` == ''
@@ -173,7 +163,7 @@ module Brow
       end
       install_nginx = false
       if `$(which brew) list`.split(/\s+/).include?('nginx')
-        nginx_modules = `nginx -V 2>&1`.scan(/\b(?:with-)([a-z_]+)\s/).flatten        
+        nginx_modules = `nginx -V 2>&1`.scan(/\b(?:with-)([a-z_]+)\s/).flatten
         puts "You have a version of nginx installed with the following optional modules: #{nginx_modules.join(', ')}"
         Brow::NginxConfig::REQUIRED_MODULES.each do |mod|
           unless nginx_modules.include?(mod)
@@ -198,7 +188,7 @@ module Brow
         formula = File.expand_path(File.join(HOME, 'lib/formulas/nginx.rb'))
         puts "Installing custom nginx based on this formula:"
         puts "   #{formula}"
-        puts 
+        puts
         `$(which brew) install #{formula} 1>&2`
         puts
       end
@@ -207,7 +197,7 @@ module Brow
         puts "Installing haproxy"
         puts
         `$(which brew) install haproxy 1>&2`
-      else 
+      else
         puts "haproxy found at #{`which haproxy`}"
         puts `haproxy -v`
       end
