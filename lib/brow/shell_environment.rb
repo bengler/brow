@@ -1,11 +1,10 @@
 # A place for shell hacks
-
 module Brow
   module ShellEnvironment
 
     # Execute a command in an environment that strive to
     # support bundler, rbenv and perhaps even rvm
-    def self.exec(commands, dir = ENV['HOME'])
+    def self.build_command(commands, dir = ENV['HOME'])
       if File.exist?(File.join(ENV['HOME'], '.rbenv'))
         dir = "#{dir}/" unless dir =~ /\/$/
           ENV['RBENV_DIR'] = dir
@@ -26,8 +25,11 @@ module Brow
       end
       cmdline.push "(#{commands.gsub(%("), %(\\"))})"
 
-      `bash -lc "#{cmdline.join(' && ')}"`
+      %(bash -lc "#{cmdline.join(' && ')}")
     end
 
+    def self.exec(commands, dir = ENV['HOME'])
+      `#{build_command(commands, dir)}`
+    end
   end
 end
