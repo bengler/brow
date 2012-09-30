@@ -57,12 +57,18 @@ class Brow::Wrangler
     puts "Updating /etc/hosts"
     Brow::HostsFile.update(@app_manager.application_names)
 
+    assert_nginx_running
+
     unless inactive.empty?
       puts "Done. Waiting for unicorn workers."
-      @app_manager.wait_for_workers(inactive)
+      begin
+        @app_manager.wait_for_workers(inactive)
+        puts "Yay! All systems go"
+      rescue Timeout::Error
+        puts "Got tired of waiting for #{(@app_manager.application_names - @app_manager.running).join(', ')}."
+        puts "You may try again soon or check syslog for errors."
+      end
     end
-    assert_nginx_running
-    puts "Yay! All systems go"
   end
 
   def down
@@ -83,16 +89,19 @@ class Brow::Wrangler
 
     begin
       @app_manager.restart(app_name, hard)
+      @app_manager.wait_for_workers([app_name]) if hard
     rescue Timeout::Error
       puts "Sorry. Failed to restart #{app_name}."
     end
-
-    @app_manager.wait_for_workers([app_name]) if hard
   end
 
   def restart_all(hard = false)
-    @app_manager.restart_all(hard)
-    @app_manager.wait_for_workers if hard
+    begin
+      @app_manager.restart_all(hard)
+      @app_manager.wait_for_workers if hard
+    rescue Timeout::Error
+      puts "Sorry. Failed to restart #{(@app_manager.application_names - @app_manager.running).join(', ')} workers."
+    end
   end
 
   def kill(app_name)
