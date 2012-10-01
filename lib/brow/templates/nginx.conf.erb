@@ -1,4 +1,6 @@
+<% if user -%>
 user <%= user %>;
+<% end -%>
 worker_processes 4;
 error_log <%= errorlog %> error;
 pid <%= pidfile %>;

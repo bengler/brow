@@ -1,5 +1,5 @@
 # Generates unicorn config files
-
+require "ostruct"
 class Brow::ServerConfig
   SOCKET_NAME_PREFIX="brow-service-"
 
@@ -10,6 +10,7 @@ class Brow::ServerConfig
     @socket = self.class.socket_for_service(@name)
     @pidfile = "/tmp/brow-#{@name}.pid"
     @workers = config['workers'] || 4
+    @timeout = config['timeout'] || 4
   end
 
   def self.socket_for_service(name)
@@ -32,12 +33,29 @@ class Brow::ServerConfig
     ERB.new(File.read("#{HOME}/lib/brow/templates/#{name}"), nil, '-') # <- '-' specifies trim mode
   end
 
+  # Needed by puppet
+  class BindingProxy
+    def initialize(_binding)
+      @binding = _binding
+    end
+    def lookupvar(var)
+      @binding.eval(var)
+    end
+  end
+
+  # Needed by puppet
+  def airbrake
+    ""
+  end
+
   def unicorn_config
     appdir = @pwd
     workers = @workers
     socket = @socket
     pidfile = @pidfile
+    timeout = @timeout
     name = @name
+    scope = BindingProxy.new(binding)
     template('unicorn.rb.erb').result(binding) # <-- binding!
   end
 

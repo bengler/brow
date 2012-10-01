@@ -1,11 +1,11 @@
 backend <%= name %>
   balance roundrobin
 <% servers.each do |server| -%>
-  server <%= server %> <%= server %> weight 100 check inter 30s fastinter 2s downinter 2s rise 1 fall 3 maxconn 200
+  server <%= server %> <%= server %> weight 100 check inter 10s fastinter 2s downinter 2s rise 1 fall 3 maxconn 200
 <% end -%>
 <% if backups.length > 0 -%>
 <%  backups.each do |server| -%>
-  server <%= server %> <%= server %> weight 100 check inter 30s fastinter 2s downinter 2s rise 1 fall 3 maxconn 200 backup
+  server <%= server %> <%= server %> weight 100 check inter 10s fastinter 2s downinter 2s rise 1 fall 3 maxconn 200 backup
 <%  end -%>
   option allbackups
 <% end -%>

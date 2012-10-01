@@ -44,7 +44,7 @@ server {
 <% if unicorn != "" -%>
 
   location / {
-    try_files $uri @unicorn;
+    try_files $uri $uri/index.html @unicorn;
 <% if htpasswd == true -%>
     auth_basic "<%= name %>";
     auth_basic_user_file "/etc/nginx/htpasswd";
