@@ -32,8 +32,14 @@ class Brow::Wrangler
       return
     end
 
-    puts "Releasing all unicorns ..."
-    @app_manager.launch_all
+    inactive = @app_manager.application_names - @app_manager.running
+    if inactive.empty?
+      puts "All unicorn workers already running"
+    else
+      puts "Releasing master unicorns for #{inactive.join(", ")} ..."
+    end
+
+    @app_manager.launch(*inactive)
 
     unless @proxy.running?
       puts "Launching nginx."
@@ -51,11 +57,18 @@ class Brow::Wrangler
     puts "Updating /etc/hosts"
     Brow::HostsFile.update(@app_manager.application_names)
 
-    puts "Done. Stand by for headcount."
-    assert_all_apps_running
     assert_nginx_running
 
-    puts "Yay! All systems go"
+    unless inactive.empty?
+      puts "Done. Waiting for unicorn workers."
+      begin
+        @app_manager.wait_for_workers(inactive)
+        puts "Yay! All systems go"
+      rescue Timeout::Error
+        puts "Got tired of waiting for #{(@app_manager.application_names - @app_manager.running).join(', ')}."
+        puts "You may try again soon or check syslog for errors."
+      end
+    end
   end
 
   def down
@@ -76,22 +89,24 @@ class Brow::Wrangler
 
     begin
       @app_manager.restart(app_name, hard)
+      @app_manager.wait_for_workers([app_name]) if hard
     rescue Timeout::Error
       puts "Sorry. Failed to restart #{app_name}."
     end
+  end
 
-    assert_all_apps_running([app_name])
+  def restart_all(hard = false)
+    begin
+      @app_manager.restart_all(hard)
+      @app_manager.wait_for_workers if hard
+    rescue Timeout::Error
+      puts "Sorry. Failed to restart #{(@app_manager.application_names - @app_manager.running).join(', ')} workers."
+    end
   end
 
   def kill(app_name)
     @app_manager.kill(app_name)
     assert_all_apps_stopped([app_name])
-  end
-
-  def restart_all(hard = false)
-    @app_manager.application_names.each do |name|
-      restart(name, hard)
-    end
   end
 
   def assert_all_apps_stopped(application_names = nil)
@@ -103,20 +118,6 @@ class Brow::Wrangler
       return true
     rescue Timeout::Error
       puts "Fatal: #{@app_manager.running.join(', ')} refuse to take a breather."
-      exit 1
-    end
-  end
-
-  def assert_all_apps_running(application_names = nil)
-    application_names ||= @app_manager.application_names
-    begin
-      Timeout.timeout(10) do
-        sleep 0.5 until (application_names - @app_manager.running).empty?
-      end
-      return true
-    rescue Timeout::Error
-      missing = application_names - @app_manager.running
-      puts "Warning: #{missing.join(', ')} has failed to launch."
       exit 1
     end
   end
