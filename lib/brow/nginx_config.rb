@@ -32,7 +32,7 @@ class Brow::NginxConfig
   end
 
   def main_config
-    user = 'nobody'
+    user = nil
     errorlog = "/dev/null"
     pidfile = PID
     accesslog = "/dev/null"

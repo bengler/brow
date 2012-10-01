@@ -1,8 +1,8 @@
 <% ([name] | aliases).each do |n| -%>
-  acl <%= name %>-host hdr_reg(host) ^<%= n.gsub(/\./, '\.') %>$
+  acl <%= name %>-host hdr_reg(host) -i ^<%= n.gsub(/\./, '\.') %>(:[0-9]+)?$
 <% end -%>
 <% if subdomains -%>
-  acl <%= name %>-host hdr_reg(host) .*\.<%= name.gsub(/\./, '\.') %>$
+  acl <%= name %>-host hdr_reg(host) -i .*\.<%= name.gsub(/\./, '\.') %>(:[0-9]+)?$
 <% end -%>
   use_backend <%= name %> if <%= name %>-host
 
