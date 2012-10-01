@@ -107,12 +107,13 @@ class Brow::ServerConfig
     save_site_config
   end
 
-  def launch
+  def prepare
     save_configs
     ignore_site_config
-    result = Brow::ShellEnvironment.exec(
+  end
+
+  def launch_command
+    Brow::ShellEnvironment.build_command(
       "BUNDLE_GEMFILE=#{@pwd}/Gemfile bundle exec unicorn -D --config-file #{unicorn_config_file_name} config.ru", @pwd)
-    puts result unless result.empty?
-    @socket
   end
 end

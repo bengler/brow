@@ -62,8 +62,8 @@ class Brow::ServerProcess
     false
   end
 
-  def self.launch(pwd)
-    Brow::ServerConfig.new(pwd).launch
+  def self.server_config_for(pwd)
+    Brow::ServerConfig.new(pwd)
   end
 
 end
