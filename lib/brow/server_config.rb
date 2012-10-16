@@ -10,7 +10,7 @@ class Brow::ServerConfig
     @socket = self.class.socket_for_service(@name)
     @pidfile = "/tmp/brow-#{@name}.pid"
     @workers = config['workers'] || 4
-    @timeout = config['timeout'] || 4
+    @timeout = config['timeout'] || 40
   end
 
   def self.socket_for_service(name)
