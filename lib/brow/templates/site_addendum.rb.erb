@@ -32,5 +32,10 @@ if not defined?(SITE_ADDENDUM_LOADED)
       end
     end
   end
-
+  # Override Sinatra production settings for dev
+  if defined?(Sinatra::Base)
+    Sinatra::Base.set :dump_errors, true
+    Sinatra::Base.set :show_exceptions, true
+    Sinatra::Base.set :logging, true
+  end
 end
