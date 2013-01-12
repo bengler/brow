@@ -54,7 +54,7 @@ class Brow::NginxConfig
       end.join("\n")}
     "
     if @default_application_name
-      result << server(@default_application_name, '*.dev')
+      result << server(@default_application_name, '_')  # Catch all
     end
     result << "\n}"
     result
@@ -86,7 +86,7 @@ class Brow::NginxConfig
     vhost_name ||= "#{name}.dev"
     socket = @apps[name]
     result = """
-      listen 80;
+      listen 80 #{'default_server' if vhost_name == '_'};
       client_max_body_size 20M;
       server_name #{vhost_name};
     """
