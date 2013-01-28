@@ -18,6 +18,7 @@ http {
   keepalive_timeout 10;
 
   add_header "X-Server" "<%= fqdn %>";
+  add_header "Vary" "Accept-Encoding";
 
   include <%= mimetypes %>;
   default_type application/octet-stream;
@@ -32,8 +33,9 @@ http {
 
   # text/html is always included in list by default, so we don't
   # specify it here
-  gzip_types text/plain text/css application/x-javascript 
-    text/xml application/xml application/xml+rss text/javascript;
+  gzip_types text/plain text/css text/xml application/xml
+  application/xml+rss application/x-javascript text/javascript
+  application/json;
 
   client_body_temp_path /tmp/nginx;
   client_body_buffer_size 64k;

@@ -1,6 +1,6 @@
-<% if unicorn != "" -%>
-upstream unicorn_<%= name %> {
-  server unix:<%= unicorn %> fail_timeout=0;
+<% if proxy != "" -%>
+upstream proxy_<%= name %> {
+  server <%= proxy[0..0] == '/' ? 'unix:' : '' %><%= proxy %> fail_timeout=0;
 }
 
 <% end -%>
@@ -8,12 +8,12 @@ server {
   listen <%= port %>;
   server_name <%= name %><%= aliases.length > 0 ? " " + aliases.join(" ") : "" %>;
   root <%= documentroot %>;
-  access_log <%= accesslog %>;
-  error_log <%= errorlog %> warn;
+  access_log off;
 <% if maxupload != "" -%>
   client_max_body_size <%= maxupload %>;
 <% end -%>
 <% if ssi != false -%>
+  include /etc/nginx/errorpages/*.conf;
 
   ssi on;
   ssi_silent_errors on;
@@ -36,24 +36,24 @@ server {
 <% end -%>
 
   location ~* \.(css|gif|ico|jpeg|jpg|js|png)$ {
-<% if unicorn != "" -%>
-    try_files $uri @unicorn;
+<% if proxy != "" -%>
+    try_files $uri @proxy;
 <% end -%>
     expires <%= ["", 0, false].include?(publicexpires) ? "off" : publicexpires %>;
   }
-<% if unicorn != "" -%>
+<% if proxy != "" -%>
 
   location / {
-    try_files $uri $uri/index.html @unicorn;
+    try_files $uri $uri/index.html @proxy;
 <% if htpasswd == true -%>
     auth_basic "<%= name %>";
     auth_basic_user_file "/etc/nginx/htpasswd";
 <% end -%>
   }
 
-  location @unicorn {
+  location @proxy {
     proxy_set_header Host $http_host;
-    proxy_pass http://unicorn_<%= name %>;
+    proxy_pass http://proxy_<%= name %>;
   }
 <% end -%>
 <% if config != "" -%>

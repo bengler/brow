@@ -1,13 +1,7 @@
 backend <%= name %>
   balance roundrobin
 <% servers.each do |server| -%>
-  server <%= server %> <%= server %> weight 100 check inter 10s fastinter 2s downinter 2s rise 1 fall 3 maxconn 200
-<% end -%>
-<% if backups.length > 0 -%>
-<%  backups.each do |server| -%>
-  server <%= server %> <%= server %> weight 100 check inter 10s fastinter 2s downinter 2s rise 1 fall 3 maxconn 200 backup
-<%  end -%>
-  option allbackups
+  server <%= server %>:<%= port %> <%= server %>:<%= port %> weight 100 check inter 10s fastinter 2s downinter 2s rise 1 fall 3 maxconn 256
 <% end -%>
   option httpchk GET <%= checkuri %> HTTP/1.1\r\nHost:\ <%= name %>
 <% if forwardfor -%>

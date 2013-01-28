@@ -6,16 +6,18 @@ types {
     image/jpeg                            jpeg jpg;
     application/x-javascript              js;
     application/atom+xml                  atom;
+    application/json                      json;
 
     text/cache-manifest                   manifest;
     text/mathml                           mml;
+    text/plain                            csv;
     text/plain                            txt;
-    image/svg+xml                         svg;
     text/vnd.sun.j2me.app-descriptor      jad;
     text/vnd.wap.wml                      wml;
     text/x-component                      htc;
 
     image/png                             png;
+    image/svg+xml                         svg;
     image/tiff                            tif tiff;
     image/vnd.wap.wbmp                    wbmp;
     image/x-icon                          ico;

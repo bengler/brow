@@ -1,5 +1,14 @@
 <% [route].flatten.each do |r| -%>
   acl <%= name %>-route path_beg <%= r %>
 <% end -%>
+<% if allow.length > 0 -%>
+<%  allow.each do |ip| -%>
+  acl <%= name %>-route-allow src <%= ip %>
+<%  end -%>
+  block if <%= name %>-route !<%= name %>-route-allow
+<% end -%>
+<% if websocketport != "" -%>
+  use_backend <%= name %>-websocket if is_websocket <%= name %>-route
+<% end -%>
   use_backend <%= name %> if <%= name %>-route
 

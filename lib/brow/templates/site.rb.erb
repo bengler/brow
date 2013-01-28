@@ -1,12 +1,18 @@
 if not defined?SITE_LOADED
   SITE_LOADED = true
 
+  require "etc"
   require "logger"
   require "syslog"
 
   # Set up environment
   ENV["RACK_ENV"] ||= ENV["RAILS_ENV"] || "<%= env %>"
   ENV["RAILS_ENV"] = ENV["RACK_ENV"]
+
+  # Ensure that we're running as app user
+  if Etc.getpwuid(Process.uid).name != "<%= name %>"
+    abort "Command must be run as user '<%= name %>' (sudo -u <%= name %>)."
+  end
 
   # Set up logging to syslog
   raise "LOGGER already defined." if defined?(LOGGER)
@@ -15,7 +21,7 @@ if not defined?SITE_LOADED
     attr_accessor :prefix
 
     def initialize(logdev=nil)
-      Syslog.open("<%= name %>", nil, Syslog::LOG_DAEMON)
+      Syslog.open("bengler|<%= name %>|<%= env %>", nil, Syslog::LOG_DAEMON)
       @level = Logger::INFO
     end
 
@@ -167,6 +173,20 @@ if not defined?SITE_LOADED
   end
 
 <% end -%>
+<% if airbrake != '' -%>
+  # Set up Rake
+  if defined?(Rake::Task) and ENV['CRONJOB']
+    class Rake::Task
+      alias_method :execute_wo_airbrake, :execute
+      def execute(args=nil)
+        execute_wo_airbrake(args)
+      rescue Exception => e
+        LOGGER.exception(e)
+      end 
+    end 
+  end 
+
+<% end -%>
   # Set up ActiveRecord
   if defined?(ActiveRecord::Base) and defined?(PG)
     class ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
@@ -205,7 +225,7 @@ if not defined?SITE_LOADED
       alias_method :initialize_wo_defaults, :initialize
       def initialize(servers=nil, options = {})
         defaults = {
-          :namespace => "<%= name %>",
+          :namespace => "<%= name %>:" + `git rev-parse HEAD`[0..6],
           :compress => true,
           :expires_in => 60*60*24
         }

@@ -4,5 +4,14 @@
 <% if subdomains -%>
   acl <%= name %>-host hdr_reg(host) -i .*\.<%= name.gsub(/\./, '\.') %>(:[0-9]+)?$
 <% end -%>
+<% if allow.length > 0 -%>
+<%  allow.each do |ip| -%>
+  acl <%= name %>-host-allow src <%= ip %>
+<%  end -%>
+  block if <%= name %>-host !<%= name %>-host-allow
+<% end -%>
+<% if websocketport != "" -%>
+  use_backend <%= name %>-websocket if is_websocket <%= name %>-host
+<% end -%>
   use_backend <%= name %> if <%= name %>-host
 
