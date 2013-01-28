@@ -10,7 +10,7 @@ if not defined?SITE_LOADED
   ENV["RAILS_ENV"] = ENV["RACK_ENV"]
 
   # Ensure that we're running as app user
-  if Etc.getpwuid(Process.uid).name != "<%= name %>"
+  if ENV["RACK_ENV"] != "development" and Etc.getpwuid(Process.uid).name != "<%= name %>"
     abort "Command must be run as user '<%= name %>' (sudo -u <%= name %>)."
   end
 
