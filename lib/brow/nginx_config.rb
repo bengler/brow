@@ -56,6 +56,7 @@ class Brow::NginxConfig
     config = ''
     aliases = []
     maxupload = ''
+    proxy = options[:socket]
     template('vhost.conf.erb').result(binding) # <-- binding!
   end
 
