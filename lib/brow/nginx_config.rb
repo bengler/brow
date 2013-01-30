@@ -139,6 +139,12 @@ class Brow::NginxConfig
         files = `port contents nginx`.split("\n").map(&:strip)
       when /^\/usr/
         files = `brew list nginx`.split("\n")
+        # New brew puts files here, and is not listed by `brew list`
+        unless files.find{ |file| file =~ /mime.types$/ } or
+            files.find{ |file| file =~ /mime.types.example$/ }
+          files << '/usr/local/etc/nginx/mime.types'
+          files << '/usr/local/etc/nginx/mime.types.example'
+        end        
       else
         puts "Nginx must be installed via either homebrew or macports"
         exit 1
