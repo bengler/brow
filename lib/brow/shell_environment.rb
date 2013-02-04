@@ -23,6 +23,7 @@ module Brow
       if File.exists?(gemfile)
         cmdline.push "export BUNDLE_GEMFILE=#{gemfile}"
       end
+      cmdline.push "export RUNNING_IN_BROW=1"
       cmdline.push "(#{commands.gsub(%("), %(\\"))})"
 
       %(bash -lc "#{cmdline.join(' && ')}")
