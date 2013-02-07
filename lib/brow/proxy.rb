@@ -28,7 +28,9 @@ class Brow::Proxy
         :default => (@app_manager.default_application_name == app))
     end
     nginx_config.generate
-    Brow::HAProxyConfig.generate(@app_manager.application_names)
+    Brow::HAProxyConfig.generate(
+      :names => @app_manager.application_names,
+      :default => @app_manager.default_application_name)
   end
 
   def valid_config?
