@@ -10,7 +10,11 @@ module Brow
           ENV['RBENV_DIR'] = dir
       end
       cmdline = []
-      if File.exist?(File.join(dir, '.rvmrc'))
+      if File.exist?(File.join(ENV['HOME'], '.rbenv')) and `which rbenv` != ''
+        # Override RBENV_DIR and RBENV_VERSION
+        cmdline.push "export RBENV_DIR=#{dir} RBENV_VERSION=''"
+        cmdline.push "cd '#{dir}'"
+      elsif File.exist?(File.join(dir, '.rvmrc')) and `which rvm` != ''
         # For RVM, we must make sure we trust our .rvmrc, which also requires
         # reloading RVM
         cmdline.push "rvm rvmrc trust '#{dir}'"
