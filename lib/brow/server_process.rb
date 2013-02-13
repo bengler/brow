@@ -20,10 +20,7 @@ class Brow::ServerProcess
   end
 
   def self.find_all
-    pids = `$(which ps) ax | grep 'unicorn master'`.split("\n").map{|line| line.scan(/^\s*(\d+).*brow-.*-unicorn/)}.flatten
-    pids.map do |pid|
-      self.new(pid)
-    end
+    `pgrep -f 'unicorn master.*brow-.*-unicorn'`.split("\n").map { |pid| self.new(pid) }
   end
 
   def self.find_by_name(name)
@@ -41,7 +38,7 @@ class Brow::ServerProcess
   end
 
   def self.old_unicorns
-    `$(which ps) ax | grep 'unicorn master (old)'`.split("\n").map{|line| line.scan(/^\s*(\d+).*brow-.*-unicorn/)}.flatten
+    `pgrep -f 'unicorn master (old).*brow-.*-unicorn'`.split("\n")
   end
 
   def self.kill_old_unicorns

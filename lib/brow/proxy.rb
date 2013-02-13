@@ -68,9 +68,18 @@ class Brow::Proxy
   end
 
   def running?
-    nginx_running = (`ps ax | grep nginx`.scan(Brow::NginxConfig::CONFIG_FILE).size > 0)
-    haproxy_running = (`ps -p $(<#{Brow::HAProxyConfig::PID})`.scan('haproxy').size > 0)
-    nginx_running && haproxy_running
+    process_running?("nginx", Brow::NginxConfig::PID) &&
+      process_running?("haproxy", Brow::HAProxyConfig::PID)
   end
+
+  private
+
+    def process_running?(name, pid_path)
+      if (pid = File.read(pid_path).strip rescue nil)
+        pids = `pgrep -f #{name}`.strip.split("\n").include?(pid.to_s)
+      else
+        false
+      end
+    end
 
 end
