@@ -30,7 +30,7 @@ module Brow
       cmdline.push "export RUNNING_IN_BROW=1"
       cmdline.push "(#{commands.gsub(%("), %(\\"))})"
 
-      %(bash -lc "#{cmdline.join(' && ')}")
+      %(env -i bash -lc "#{cmdline.join(' && ')}")
     end
 
     def self.exec(commands, dir = ENV['HOME'])
