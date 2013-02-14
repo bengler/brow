@@ -84,7 +84,7 @@ module Brow
       command = command.join(' ')
       wrangler.app_manager.application_dirs.each do |dir|
         puts "#{dir}$ #{command}"
-        Brow::ShellEnvironment.exec("#{command} 1>&2", dir)
+        Brow::ShellEnvironment.run("#{command} 1>&2", dir)
         puts
       end
     end
@@ -131,14 +131,14 @@ module Brow
     def wipe
       puts "Sending kill -9 to all unicorn, haproxy and nginx processes..."
       ["unicorn", "nginx", "haproxy"].each do |process_name|
-        puts process_name
-        process_name[0] = "[#{process_name[0]}]" # making the grep process invisible
-        kill_command = "sudo kill -9 `ps aux | grep '#{process_name}'|awk '{print $2}'`"
-        `#{kill_command}`
-        sleep 4
-        unless `ps aux | grep '#{process_name}'`.length < 1
-          puts "  ...is still hanging around :-("
+        print process_name
+        loop do
+          `pkill 9 -f #{process_name}`
+          break if $0.exitstatus == 0
+          sleep 1
+          print '.'
         end
+        puts
       end
     end
 
