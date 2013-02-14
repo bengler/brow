@@ -54,6 +54,7 @@ server {
   location @proxy {
     proxy_set_header Host $http_host;
     proxy_pass http://proxy_<%= name %>;
+    proxy_read_timeout 300s;
   }
 <% end -%>
 <% if config != "" -%>
