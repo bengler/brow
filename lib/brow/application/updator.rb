@@ -13,7 +13,7 @@ module Brow
       end
 
       def exec(*commands)
-        Brow::ShellEnvironment.exec(commands.compact.join(' && '), root)
+        Brow::ShellEnvironment.run(commands.compact, root)
       end
 
       def update(&block)

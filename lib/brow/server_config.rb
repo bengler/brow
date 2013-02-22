@@ -10,7 +10,7 @@ class Brow::ServerConfig
     @socket = self.class.socket_for_service(@name)
     @pidfile = "/tmp/brow-#{@name}.pid"
     @workers = config['workers'] || 4
-    @timeout = config['timeout'] || 40
+    @timeout = config['timeout'] || 300
   end
 
   def self.socket_for_service(name)
@@ -114,6 +114,9 @@ class Brow::ServerConfig
 
   def launch_command
     Brow::ShellEnvironment.build_command(
-      "BUNDLE_GEMFILE=#{@pwd}/Gemfile bundle exec unicorn -D --config-file #{unicorn_config_file_name} config.ru", @pwd)
+      "env RUNNING_IN_BROW=1 BUNDLE_GEMFILE=#{File.join(@pwd, 'Gemfile')} " \
+      "bundle exec unicorn -D --config-file #{unicorn_config_file_name} config.ru", @pwd) +
+      ">/tmp/brow-#{@name}-unicorn.log 2>&1"
   end
+
 end

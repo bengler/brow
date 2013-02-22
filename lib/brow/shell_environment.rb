@@ -5,10 +5,8 @@ module Brow
     # Execute a command in an environment that strive to
     # support bundler, rbenv and perhaps even rvm
     def self.build_command(commands, dir = ENV['HOME'])
-      if File.exist?(File.join(ENV['HOME'], '.rbenv'))
-        dir = "#{dir}/" unless dir =~ /\/$/
-          ENV['RBENV_DIR'] = dir
-      end
+      dir = "#{dir}/" unless dir =~ /\/$/
+
       cmdline = []
       if File.exist?(File.join(ENV['HOME'], '.rbenv')) and `which rbenv` != ''
         # Override RBENV_DIR and RBENV_VERSION
@@ -23,18 +21,16 @@ module Brow
       else
         cmdline.push "cd '#{dir}'"
       end
-      gemfile = File.join(dir, 'Gemfile')
-      if File.exists?(gemfile)
-        cmdline.push "export BUNDLE_GEMFILE=#{gemfile}"
+
+      [commands].flatten.compact.each do |command|
+        cmdline << command.gsub(%("), %(\\"))
       end
-      cmdline.push "export RUNNING_IN_BROW=1"
-      cmdline.push "(#{commands.gsub(%("), %(\\"))})"
 
       %(env -i bash -lc "#{cmdline.join(' && ')}")
     end
 
-    def self.exec(commands, dir = ENV['HOME'])
-      `#{build_command(commands, dir)}`
+    def self.run(commands, dir = ENV['HOME'])
+      system(build_command(commands, dir))
     end
   end
 end
