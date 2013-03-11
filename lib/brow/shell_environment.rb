@@ -11,6 +11,9 @@ module Brow
       if File.exist?(File.join(ENV['HOME'], '.rbenv')) and `which rbenv` != ''
         # Override RBENV_DIR and RBENV_VERSION
         cmdline.push "export RBENV_DIR=#{dir} RBENV_VERSION=''"
+        %w(RBENV_VERSION RUBYOPT BUNDLE_GEMFILE BUNDLE_BIN_PATH GEM_HOME GEM_PATH).each do |key|
+          cmdline.push "unset #{key}" if ENV[key]
+        end
         cmdline.push "cd '#{dir}'"
       elsif File.exist?(File.join(dir, '.rvmrc')) and `which rvm` != ''
         # For RVM, we must make sure we trust our .rvmrc, which also requires
@@ -22,11 +25,7 @@ module Brow
         cmdline.push "cd '#{dir}'"
       end
 
-      [commands].flatten.compact.each do |command|
-        cmdline << command.gsub(%("), %(\\"))
-      end
-
-      %(env -i bash -lc "#{cmdline.join(' && ')}")
+      %(bash -lc "#{cmdline.join(' && ')}")
     end
 
     def self.run(commands, dir = ENV['HOME'])
