@@ -25,6 +25,10 @@ module Brow
         cmdline.push "cd '#{dir}'"
       end
 
+      [commands].flatten.compact.each do |command|
+        cmdline << command.gsub(%("), %(\\"))
+      end
+
       %(bash -lc "#{cmdline.join(' && ')}")
     end
 
