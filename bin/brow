@@ -134,7 +134,7 @@ module Brow
         print process_name
         loop do
           `pkill 9 -f #{process_name}`
-          break if $0.exitstatus == 0
+          break if $0.to_i == 0
           sleep 1
           print '.'
         end
