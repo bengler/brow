@@ -22,6 +22,21 @@ class Brow::Wrangler
     ensure_folder_exists(ROOT_PATH)
   end
 
+  def ensure_nginx_running
+    unless @proxy.running?
+      puts "Launching nginx."
+      unless @proxy.valid_config?
+        puts "Unable to launch Nginx/Haproxy"
+        puts @proxy.last_validation_output
+        exit 1
+      end
+      @proxy.start
+    else
+      puts "Nginx allready running, reloading config."
+      @proxy.reload
+    end
+  end
+
   def conflicting_resolver?
     File.exists?('/etc/resolver/dev')
   end
@@ -41,18 +56,7 @@ class Brow::Wrangler
 
     @app_manager.launch(*inactive)
 
-    unless @proxy.running?
-      puts "Launching nginx."
-      unless @proxy.valid_config?
-        puts "Unable to launch Nginx/Haproxy"
-        puts @proxy.last_validation_output
-        exit 1
-      end
-      @proxy.start
-    else
-      puts "Nginx allready running, reloading config."
-      @proxy.reload
-    end
+    ensure_nginx_is_running!
 
     puts "Updating /etc/hosts"
     Brow::HostsFile.update(@app_manager.application_names)
@@ -136,4 +140,5 @@ class Brow::Wrangler
       Dir.mkdir(folder)
     end
   end
+
 end

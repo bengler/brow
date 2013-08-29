@@ -39,6 +39,7 @@ module Brow
             wrangler.restart(dependency, options['hard'])
           end
         end
+        wrangler.ensure_nginx_running if options['hard']
         wrangler.restart(name, options['hard'])
       else
         if options['hard']
