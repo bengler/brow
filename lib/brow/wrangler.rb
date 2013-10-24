@@ -56,7 +56,7 @@ class Brow::Wrangler
 
     @app_manager.launch(*inactive)
 
-    ensure_nginx_is_running!
+    ensure_nginx_running
 
     puts "Updating /etc/hosts"
     Brow::HostsFile.update(@app_manager.application_names)
