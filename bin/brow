@@ -190,7 +190,7 @@ module Brow
         puts "Installing custom nginx based on this formula:"
         puts "   #{formula}"
         puts
-        `$(which brew) install #{formula} 1>&2`
+        `$(which brew) install #{formula}`
         puts
       end
 
