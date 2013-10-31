@@ -4,8 +4,6 @@ require 'yaml'
 class Brow::ServerProcess
   attr_reader :pid, :pwd, :name
 
-  SOCKET_NAME_PREFIX="brow-service-"
-
   def initialize(pid)
     @pid = pid
     pwd_line = `lsof -a -p #{pid} -d cwd -Fn`.split(/\n/).find{|l| l =~ /^n/}
@@ -22,10 +20,7 @@ class Brow::ServerProcess
   end
 
   def self.find_all
-    pids = `$(which ps) ax | grep 'unicorn master'`.split("\n").map{|line| line.scan(/^\s*(\d+).*#{SOCKET_NAME_PREFIX}/)}.flatten
-    pids.map do |pid|
-      self.new(pid)
-    end
+    `pgrep -f 'unicorn master.*brow-.*-unicorn'`.split("\n").map { |pid| self.new(pid) }
   end
 
   def self.find_by_name(name)
@@ -43,7 +38,7 @@ class Brow::ServerProcess
   end
 
   def self.old_unicorns
-    `$(which ps) ax | grep 'unicorn master (old)'`.split("\n").map{|line| line.scan(/^\s*(\d+).*#{SOCKET_NAME_PREFIX}/)}.flatten
+    `pgrep -f 'unicorn master (old).*brow-.*-unicorn'`.split("\n")
   end
 
   def self.kill_old_unicorns
@@ -56,7 +51,7 @@ class Brow::ServerProcess
     if proc = find_by_name(name)
       `kill -s USR2 #{proc.pid}`
       sleep 0.5
-      Timeout::timeout(5) do        
+      Timeout::timeout(5) do
         sleep 0.5 until kill_old_unicorns == 0
       end
       return true
@@ -64,36 +59,8 @@ class Brow::ServerProcess
     false
   end
 
-  def self.socket_for_service(name)
-    "/tmp/#{SOCKET_NAME_PREFIX}#{name}.sock"
-  end
-
-  def self.launch(pwd)
-    service_name = File.basename(pwd)
-
-    unicorn_options = {:pwd => pwd}
-
-    config_path = File.join(pwd, ".brow")
-    if File.exist?(config_path)
-      config = YAML.load(File.open(config_path)) || {}
-      if (workers = config['workers'])
-        unicorn_options[:workers] = workers.to_i
-      end
-    end
-
-    unicorn = Brow::UnicornConfig.new(unicorn_options)
-
-    config_file_name = "/tmp/brow-#{service_name}-unicorn.config.rb"
-    File.open(config_file_name, 'w') do |f|
-      f.write(unicorn.generate) 
-    end
-
-    socket = socket_for_service(File.basename(pwd))
-
-    result = Brow::ShellEnvironment.exec(
-      "BUNDLE_GEMFILE=#{pwd}/Gemfile bundle exec unicorn -D -l #{socket} --config-file #{config_file_name} config.ru", pwd)
-    puts result unless result.empty?
-    socket
+  def self.server_config_for(pwd)
+    Brow::ServerConfig.new(pwd)
   end
 
 end

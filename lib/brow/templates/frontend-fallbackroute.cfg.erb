@@ -1,0 +1,14 @@
+<% [fallbackroute].flatten.each do |r| -%>
+  acl <%= name %>-route-fallback path_beg <%= r %>
+<% end -%>
+<% if allow.length > 0 -%>
+<%  allow.each do |ip| -%>
+  acl <%= name %>-route-fallback-allow src <%= ip %>
+<%  end -%>
+  block if <%= name %>-route-fallback !<%= name %>-route-fallback-allow
+<% end -%>
+<% if websocketport != "" -%>
+  use_backend <%= name %>-websocket if is_websocket <%= name %>-route-fallback
+<% end -%>
+  use_backend <%= name %> if <%= name %>-route-fallback
+

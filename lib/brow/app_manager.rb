@@ -1,14 +1,18 @@
+# encoding: utf-8
 # Discover configuration and manage web servers
 
 require 'timeout'
+require 'open3'
 
 class Brow::AppManager
   attr_reader :root
 
-  SOCKET_PREFIX = "brow-service"
-
   def initialize(root = nil)
-    @root = (root || ENV['HOME']+"/.brow").chomp("\n")    
+    @root = (root || ENV['HOME']+"/.brow").chomp("\n")
+  end
+
+  def find(name)
+    applications[name]
   end
 
   def servers
@@ -54,7 +58,7 @@ class Brow::AppManager
 
   def kill_all
     to_kill = servers.keys
-    puts "Killing #{to_kill.join(', ')}" unless to_kill.empty?
+    puts "Stopping #{to_kill.join(', ')}" unless to_kill.empty?
     Brow::ServerProcess.kill_all
   end
 
@@ -64,8 +68,37 @@ class Brow::AppManager
   end
 
   def launch_all
-    (application_names-running).each do |name|
-      launch(name)      
+    launch(*(application_names-running))
+  end
+
+  def launch(*names)
+    return if names.empty?
+
+    server_configs = names.map do |name|
+      Brow::ServerProcess.server_config_for(applications[name].root)
+    end
+
+    server_configs.each(&:prepare)
+    commands = server_configs.map(&:launch_command)
+
+    _, wait_threads = Open3.pipeline_r(*commands)
+
+    # Makes the current thread wait until all commands are executed (i.e. the unicorn master process has got its pid)
+    wait_threads.map(&:pid)
+  end
+
+  def wait_for_workers(names=nil, timeout=20)
+    # Waits for workers and puts a notification as the workers are starting up
+    Timeout::timeout(timeout) do
+      pending = names || application_names
+      until pending.empty?
+        up = running & pending
+        up.each do |name|
+          puts "  + #{name}"
+        end
+        pending -= up
+        sleep 0.5
+      end
     end
   end
 
@@ -73,36 +106,51 @@ class Brow::AppManager
     running.include?(name)
   end
 
-  def launch(name)
-    puts "  + #{name}"
-    Brow::ServerProcess.launch(applications[name].root)
-  end
-
   def kill(name)
-    puts "  - #{name}"
     Brow::ServerProcess.kill(name)
+    puts "  - #{name}"
   end
 
   def restart(name, hard = false)
-    unless hard
-      puts "Reloading #{name}"
-      Brow::ServerProcess.graceful_restart(name)
-    else
-      kill(name) if running?(name)
+    restart_multi([name], hard)
+  end
+
+  def restart_all(hard = false)
+    restart_multi(application_names, hard)
+  end
+
+  def restart_multi(names, hard = false)
+    if hard
+      running = names.select { |name| running?(name) }
+      running.each { |name| kill(name) }
       Timeout::timeout(5) do
-        sleep 1 while running?(name)
+        sleep 0.5 while names.any? { |name| running?(name) }
       end
-      launch(name)
+      launch(*names)
+    else
+      print "Reloading #{names.join(", ")}... "
+      names.each do |name|
+        Brow::ServerProcess.graceful_restart(name)
+      end
+      puts "Done."
     end
     true
   end
 
   def socket_for(name)
-    Brow::ServerProcess.socket_for_service(name)
+    Brow::ServerConfig.socket_for_service(name)
   end
 
   def sockets
-    running.map{|name| socket_for(name)}
+    running.map { |name| socket_for(name) }
+  end
+
+  def dependencies(name)
+    application = find(name)
+    raise StandardError, "Uknown application: #{name}" unless application
+    PebbleFile.dependencies(application.root, []) do |service_name|
+      find(service_name).root
+    end
   end
 
   private

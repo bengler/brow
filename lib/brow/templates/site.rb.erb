@@ -1,0 +1,233 @@
+if not defined?SITE_LOADED
+  SITE_LOADED = true
+
+  require "etc"
+  require "logger"
+  require "syslog"
+
+  # Set up environment
+  ENV["RACK_ENV"] ||= ENV["RAILS_ENV"] || "<%= env %>"
+  ENV["RAILS_ENV"] = ENV["RACK_ENV"]
+
+  # Ensure that we're running as app user
+  if ['production', 'staging', 'preprod'].include?ENV["RACK_ENV"] and Etc.getpwuid(Process.uid).name != "<%= name %>"
+    abort "Command must be run as user '<%= name %>' (sudo -u <%= name %>)."
+  end
+
+  # Set up logging to syslog
+  raise "LOGGER already defined." if defined?(LOGGER)
+
+  LOGGER = Class.new(Logger) do # anonymous class instance, think lambda
+    attr_accessor :prefix
+
+    def initialize(logdev=nil)
+      Syslog.open("bengler|<%= name %>|<%= env %>", nil, Syslog::LOG_DAEMON)
+      @level = Logger::INFO
+    end
+
+    def add(severity, message=nil, progname=nil, &block)
+      message = block.call if block
+      message ||= progname
+      return unless message
+      message = message.to_s
+      message = message.gsub("%", "%%") if message =~ /%/
+      message.split("\n").each do |line|
+        next if line =~ /^\s*$/
+        line = @prefix + line if @prefix
+        Syslog.log({
+          Logger::DEBUG => Syslog::LOG_DEBUG,
+          Logger::ERROR => Syslog::LOG_ERR,
+          Logger::FATAL => Syslog::LOG_CRIT,
+          Logger::INFO => Syslog::LOG_INFO,
+          Logger::UNKNOWN => Syslog::LOG_NOTICE,
+          Logger::WARN => Syslog::LOG_WARNING,
+        }[severity], line)
+      end
+    end
+
+    # Convenience method for exceptions, logs them and notifies Airbrake
+    def exception(exception, rackenv=nil)
+      fatal(exception.inspect)
+      fatal(exception.backtrace.join("\n"))
+<% if airbrake != '' -%>
+      Airbrake.notify_or_ignore(exception, :rack_env => rackenv) if defined?(Airbrake)
+<% end -%>
+    end
+
+    # Ignore setting level, so gems can't override policy
+    def level=(level)
+    end
+  end.new
+
+  at_exit do
+    if $! and not $!.is_a? SystemExit and not $!.is_a? SignalException
+      LOGGER.exception($!)
+<% if airbrake != '' -%>
+      # cronjob failures handled by Airbrake, no need for exception output
+      $stderr.reopen('/dev/null', 'w') if defined?(Airbrake) and ENV['CRONJOB']
+<% end -%>
+    end
+  end
+
+  # Load Bundler gems
+  require "bundler"
+  b = Bundler.setup
+  if b.gems['rails'].empty? # Load non-Rails projects
+    Bundler.require
+  elsif b.gems['rails'][0].version.to_s =~ /^2/ # Load Rails 2, barfs on Bundler.require
+    require './config/boot'
+  else # Load Rails 3 projects
+<% if not ['', nil, false].include?(dbname) -%>
+    require 'rails/all'
+    Bundler.require
+<% else -%>
+    require 'action_controller/railtie'
+    require 'action_mailer/railtie'
+    require 'active_resource/railtie'
+    require 'sprockets/railtie'
+    Bundler.require
+<% end -%>
+  end
+  require 'active_record/connection_adapters/postgresql_adapter' if defined?(ActiveRecord::Base)
+
+<% if airbrake != '' -%>
+  # Set up Airbrake notifier
+  require 'airbrake' unless b.gems['airbrake'].empty?
+  if defined?(Airbrake)
+    Airbrake.configure do |c|
+      c.api_key = '<%= airbrake %>'
+      c.host = 'errbit.o5.no'
+      c.port = 443
+      c.secure = true
+      c.logger = LOGGER
+      c.environment_name = '<%= env %>'
+      c.project_root = '/srv/<%= name %>/current'
+      c.ignore << "ActionController::UnknownHttpMethod"
+      c.ignore_by_filter do |e|
+        ignore = nil
+        # https://github.com/taf2/curb/issues/117
+        ignore = true if e[:error_class] == "RuntimeError" and e[:error_message] =~ /select\(\): Interrupted system call/
+        # IRB exits
+        ignore = true if e[:error_class] == "ArgumentError" and e[:error_message] =~ /uncaught throw :IRB_EXIT/
+        # STDERR issues
+        ignore = true if e[:error_class] == "Errno::EIO" and e[:error_message] =~ /Input\/output error - <STDERR>/
+        ignore
+      end
+    end
+  end
+
+<% end -%>
+  # Attach logger to some common systems
+  ActionMailer::Base.logger = LOGGER if defined?(ActionMailer::Base)
+  ActiveRecord::Base.logger = LOGGER if defined?(ActiveRecord::Base)
+  Dalli.logger = LOGGER if defined?(Dalli)
+  Delayed::Worker.logger = LOGGER if defined?(Delayed)
+  Rails.logger = LOGGER if defined?(Rails) and not Rails.version =~ /^2/
+
+  ActiveSupport::Deprecation.silenced = true if defined?(ActiveSupport::Deprecation)
+
+  # Set up Sinatra
+  if defined?(Sinatra::Base)
+    Sinatra::Base.set :dump_errors, false
+    Sinatra::Base.set :show_exceptions, false
+    Sinatra::Base.set :logging, false
+    Sinatra::Base.error Exception do
+      if env['sinatra.error']
+        LOGGER.exception(env['sinatra.error'], env)
+      else
+        LOGGER.warn('Sinatra error without exception')
+      end
+      '<h1>Internal Server Error</h1>'
+    end 
+  end
+
+<% if airbrake != '' -%>
+  # Set up Rails
+  if defined?(Rails)
+    module RescueWithAirbrake
+      extend ActiveSupport::Concern
+
+      included do
+        rescue_from StandardError do |exception|
+          if respond_to?(:render_overloaded) and exception.message =~
+            %r{PG.*ERROR:\s+(canceling statement due to statement timeout|deadlock detected)}i
+            render_overloaded
+          else
+            ::Airbrake.notify_or_ignore(exception, airbrake_request_data)
+            if respond_to?(:render_internal_error)
+              render_internal_error
+            else
+              render :status => 500, :text => 'Internal server error'
+            end
+          end
+        end
+      end
+    end
+
+    class ActionController::Base
+      include RescueWithAirbrake
+    end
+  end
+
+<% end -%>
+<% if airbrake != '' -%>
+  # Set up Rake
+  if defined?(Rake::Task) and ENV['CRONJOB']
+    class Rake::Task
+      alias_method :execute_wo_airbrake, :execute
+      def execute(args=nil)
+        execute_wo_airbrake(args)
+      rescue Exception => e
+        LOGGER.exception(e)
+      end 
+    end 
+  end 
+
+<% end -%>
+  # Set up ActiveRecord
+  if defined?(ActiveRecord::Base) and defined?(PG)
+    class ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
+      [:execute, :query, :exec_cache, :exec_no_cache].each do |name|
+        next unless method_defined?name
+        define_method("#{name}_with_connection_failure_recovery") do |*args|
+          begin
+            send("#{name}_without_connection_failure_recovery", *args)
+          rescue ActiveRecord::StatementInvalid, PG::Error => e
+            if not @in_connection_recovery and @connection.status == PG::Connection::CONNECTION_BAD and open_transactions == 0
+              if (logger = ActiveRecord::Base.logger) && logger.respond_to?(:warn)
+                logger.warn("Database connection failure, reconnecting")
+              end
+              @in_connection_recovery = true
+              reconnect!
+              @in_connection_recovery = false
+              send("#{name}_without_connection_failure_recovery", *args)
+            else
+              raise e
+            end
+          end
+        end
+        alias_method_chain name, :connection_failure_recovery
+      end
+    end
+  end
+
+  # Set up Dalli
+<% if not [nil, '', false, 0, [], {}].include?(memcached) -%>
+  ENV['MEMCACHE_SERVERS'] = '<%= [memcached].flatten.join(",") %>'
+
+<% end -%>
+  if defined?(Dalli)
+    class Dalli::Client
+      # Set some default options for Dalli
+      alias_method :initialize_wo_defaults, :initialize
+      def initialize(servers=nil, options = {})
+        defaults = {
+          :namespace => "<%= name %>:" + `git rev-parse HEAD`[0..6],
+          :compress => true,
+          :expires_in => 60*60*24
+        }
+        initialize_wo_defaults(servers, defaults.merge(options))
+      end
+    end
+  end
+end

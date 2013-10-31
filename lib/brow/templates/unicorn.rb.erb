@@ -1,0 +1,76 @@
+working_directory "<%= appdir %>"
+listen "<%= socket %>"
+pid "<%= pidfile %>"
+worker_processes <%= workers %>
+timeout <%= scope.lookupvar('timeout') %>
+preload_app true
+
+require "<%= appdir %>/config/site.rb"
+logger LOGGER
+
+class Rack::TerseLogging
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    return @app.call(env) unless LOGGER.info?
+    LOGGER.prefix = "#{Process.pid}:#{rand(0xffff).to_s(16)} "
+    out = @app.call(env)
+    port = env[KEY_SERVER_PORT]
+    LOGGER.info "#{env[KEY_REQUEST_METHOD]} " \
+      "#{env[KEY_RACK_URL_SCHEME]}://#{env[KEY_HTTP_X_FORWARDED_HOST] || env[KEY_HTTP_HOST]}" \
+      "#{':' + port if port and port != DEFAULT_PORT}#{env[KEY_REQUEST_URI]} " \
+      "#{(env[KEY_HTTP_X_FORWARDED_FOR] || env[KEY_REMOTE_ADDR]).to_s.sub(/,.*/, '')} #{out[0]} \"#{env[KEY_HTTP_USER_AGENT]}\""
+    out
+  end
+
+  private
+    DEFAULT_PORT = '80'.freeze
+    KEY_HTTP_HOST = 'HTTP_HOST'.freeze
+    KEY_HTTP_USER_AGENT = 'HTTP_USER_AGENT'.freeze
+    KEY_HTTP_X_FORWARDED_FOR = "HTTP_X_FORWARDED_FOR".freeze
+    KEY_HTTP_X_FORWARDED_HOST = "HTTP_X_FORWARDED_HOST".freeze
+    KEY_RACK_URL_SCHEME = 'rack.url_scheme'.freeze
+    KEY_REMOTE_ADDR = 'REMOTE_ADDR'.freeze
+    KEY_REQUEST_METHOD = 'REQUEST_METHOD'.freeze
+    KEY_REQUEST_URI = 'REQUEST_URI'.freeze
+    KEY_SERVER_PORT = 'SERVER_PORT'.freeze
+end
+
+before_fork do |server, worker|
+  # Close all connections before forking
+  ActiveRecord::Base.connection.disconnect! if defined?(ActiveRecord::Base) and ActiveRecord::Base.connected?
+  ObjectSpace.each_object(Dalli::Client){|client| client.close} if defined?(Dalli)
+  Hupper.release! if defined?(Hupper)
+
+  # Kill old master, if running (to enable graceful restarts)
+  oldpid = Integer(File.read("<%= pidfile %>.oldbin")) rescue nil
+  if oldpid && oldpid != Process.pid
+    begin
+      Process.kill("QUIT", oldpid)
+    rescue Errno::ENOENT, Errno::ESRCH
+    end
+  end
+end
+
+after_fork do |server, worker|
+  # Set up ping routes and request logging by wrapping app
+  server.app = Rack::Builder.new do
+    ping = Proc.new do |env|
+      [200, {"Content-Type" => "text/plain"}, ["<%= name %>"]]
+    end
+    map("/") do
+      use Rack::TerseLogging
+      run server.app
+    end
+    map("/api/<%= name %>/ping") {run ping}
+    map("/ping") {run ping}
+  end.to_app
+
+  # Re-establish connections after forking
+  ActiveRecord::Base.establish_connection(
+    YAML::load_file("config/database.yml")[ENV["RACK_ENV"]]
+  ) if defined?(ActiveRecord::Base) and File.exists?("config/database.yml")
+  Hupper.initialize! if defined?(Hupper)
+end

@@ -1,0 +1,40 @@
+# Simple configuration for an HTTP proxy listening on port 80 on all
+# interfaces and forwarding requests to a single backend "servers" with a
+# single server "server1" listening on 127.0.0.1:8000
+
+global
+    daemon
+    maxconn 256
+    pidfile <%= pidfile %>
+    log 127.0.0.1:514 local0 debug
+    log-tag haproxy
+    # Note on enabling connections on os x: http://hints.macworld.com/article.php?story=20110724103552640
+defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 300000ms
+    log global
+    option http-server-close
+    option redispatch
+    option httplog
+
+frontend http-in
+    bind *:80
+    <% names.each do |name| %>
+    acl <%= name %>-route path_beg /api/<%= name %>/
+    use_backend <%= name %> if <%= name %>-route
+    <% end -%>
+    <% names.each do |name| %>
+    acl <%= name %>-host hdr(host) <%= name %>.dev
+    use_backend <%= name %> if <%= name %>-host
+    <% end %>
+    <% if default_name %>
+    default_backend <%= default_name %>
+    <% end %>
+
+<% names.each do |name| %>
+backend <%= name %>
+    reqirep ^Host:\ (\S+).*$ Host:\ <%= name %>\r\nX-Forwarded-Host:\ \1
+    server name 127.0.0.1:<%= server_port %> maxconn 32
+<% end %>

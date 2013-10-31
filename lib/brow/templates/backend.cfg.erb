@@ -1,0 +1,16 @@
+backend <%= name %>
+  balance roundrobin
+<% servers.each do |server| -%>
+  server <%= server %>:<%= port %> <%= server %>:<%= port %> weight 100 check inter 10s fastinter 2s downinter 2s rise 1 fall 3 maxconn 256
+<% end -%>
+  option httpchk GET <%= checkuri %> HTTP/1.1\r\nHost:\ <%= name %>
+<% if forwardfor -%>
+  option forwardfor
+<% end -%>
+<% if forcehost -%>
+  reqirep ^Host:\ (\S+).*$ Host:\ <%= name %>\r\nX-Forwarded-Host:\ \1
+<% end -%>
+<% rewrite.each_pair do |from, to| -%>
+  reqirep <%= from %> <%= to %>
+<% end -%>
+

@@ -1,0 +1,41 @@
+# Since site.rb.erb is regularly synced with the production environment, no 
+# custom code should reside there. This file is appended to site.rb and should 
+# contain all hacks^H^H^H^H^Hconfig specific to the development environment.
+
+if not defined?(SITE_ADDENDUM_LOADED)
+  SITE_ADDENDUM_LOADED = true
+
+  # A beaoooootifol hack to add a Sinatra::Reloader to any and all sinatra-apps
+  # created in this environment. It works by hooking the inherited-event on the
+  # Sinatra::Base class as the reloader has to be registerd before any routes
+  # are added.
+  # This hack is triggered whenever the sinatra-contrib-gem is part of the bundle.
+  if Bundler.setup.gems['sinatra-contrib'].any?
+    require 'sinatra/reloader'
+    LOGGER.info("Attaching Sinatra::Reloader Autoplay")
+    Sinatra::Base.class_eval do
+      class << self
+        alias original_inherited inherited
+        def inherited(klass)
+          original_inherited(klass)        
+          klass.class_eval do
+            configure :development do            
+              register Sinatra::Reloader
+              also_reload "api/**/*.rb"
+              also_reload "api/**/*.pg"
+              also_reload "api/**/*.erb"
+              also_reload "api/**/*.fu"
+              also_reload "lib/**/*.rb"
+            end
+          end
+        end
+      end
+    end
+  end
+  # Override Sinatra production settings for dev
+  if defined?(Sinatra::Base)
+    Sinatra::Base.set :dump_errors, true
+    Sinatra::Base.set :show_exceptions, :after_handler
+    Sinatra::Base.set :logging, true
+  end
+end

@@ -1,0 +1,5 @@
+<% for ip in adminips do -%>
+  acl adminips src <%= ip %>
+<% end -%>
+  block unless adminips
+
