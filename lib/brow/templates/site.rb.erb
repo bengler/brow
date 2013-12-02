@@ -88,7 +88,9 @@ if not defined?SITE_LOADED
     Bundler.require
 <% end -%>
   end
-  require 'active_record/connection_adapters/postgresql_adapter' if defined?(ActiveRecord::Base)
+  if defined?(ActiveRecord::Base) && !b.gems['pg'].empty?
+    require 'active_record/connection_adapters/postgresql_adapter'
+  end
 
 <% if airbrake != '' -%>
   # Set up Airbrake notifier
