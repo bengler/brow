@@ -21,11 +21,13 @@ defaults
 
 frontend http-in
     bind *:80
-    <% names.each do |name| %>
-    acl <%= name %>-route path_beg /api/<%= name %>/
-    use_backend <%= name %> if <%= name %>-route
+    <% apps_paths.each do |name, paths| %>
+    <% paths.each_with_index do |path, index| %>
+    acl <%= name %>-route-<%= index + 1 %> path_beg <%= path %>/
+    use_backend <%= name %> if <%= name %>-route-<%= index + 1 %>
     <% end -%>
-    <% names.each do |name| %>
+    <% end -%>
+    <% apps_paths.each_key do |name| %>
     acl <%= name %>-host hdr(host) <%= name %>.dev
     use_backend <%= name %> if <%= name %>-host
     <% end %>
@@ -33,7 +35,7 @@ frontend http-in
     default_backend <%= default_name %>
     <% end %>
 
-<% names.each do |name| %>
+<% apps_paths.each_key do |name| %>
 backend <%= name %>
     reqirep ^Host:\ (\S+).*$ Host:\ <%= name %>\r\nX-Forwarded-Host:\ \1
     server name 127.0.0.1:<%= server_port %> maxconn 32

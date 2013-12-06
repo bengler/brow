@@ -56,6 +56,10 @@ class Brow::AppManager
     applications.keys
   end
 
+  def application_paths
+    Hash[applications.map {|name, app| [name, app.paths]}]
+  end
+
   def kill_all
     to_kill = servers.keys
     puts "Stopping #{to_kill.join(', ')}" unless to_kill.empty?

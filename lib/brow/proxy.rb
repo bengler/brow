@@ -29,7 +29,7 @@ class Brow::Proxy
     end
     nginx_config.generate
     Brow::HAProxyConfig.generate(
-      :names => @app_manager.application_names,
+      :apps_paths => @app_manager.application_paths,
       :default => @app_manager.default_application_name)
   end
 

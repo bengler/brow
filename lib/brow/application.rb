@@ -1,15 +1,23 @@
 # Represents an application configured in the .brow folder
 
 class Brow::Application
-  attr_reader :root, :name
+  attr_reader :root, :name, :paths
 
   def initialize(root)
     @root = root
     @name = File.basename(@root).downcase
+    @paths = extract_paths
+    @paths << "/api/#{name}" if @paths.empty?
   end
 
   def rails?
     @rails ||= gem_rails_configured?
+  end
+
+  # Extract application top-level map paths from config.ru
+  # Note that top-level is defined as unindented map-statements
+  def extract_paths
+    File.read(File.join @root, "config.ru").scan(/^map[( ]*['"]([^'"]+)/).flatten
   end
 
   def update(&block)
