@@ -78,6 +78,10 @@ class Brow::Wrangler
   def down
     puts "Killing nginx"
     @proxy.stop if @proxy.running?
+
+    puts "Updating /etc/hosts"
+    Brow::HostsFile.remove_all
+
     puts "Giving all unicorns a break ..."
     @app_manager.kill_all
     assert_all_apps_stopped

@@ -23,4 +23,5 @@ Gem::Specification.new do |s|
   s.add_dependency "thor"
   s.add_dependency "rb-fsevent"
   s.add_dependency "guard"
+  s.add_dependency 'ghost', '~> 1.0.0pre2'
 end

@@ -1,35 +1,37 @@
-# Adds localhost-mappings to /etc/hosts
+require 'ghost'
 
-module Brow::HostsFile
+module Brow
+  module HostsFile
 
-  def self.hosts_file_path
-    '/etc/hosts'
-  end
+    DOMAIN_SUFFIX = 'dev'
 
-  def self.update(application_names, domain = 'dev')
-    service_lines = application_names.map do |name|
-      "127.0.0.1\t#{name}.#{domain}\t#brow"
+    # Remove mappings from /etc/hosts.
+    def self.remove_all
+      update([])
     end
 
-    unless File.exists?(hosts_file_path)
-      %x{sudo touch #{hosts_file_path}}
-    end
+    # Adds mappings to /etc/hosts.
+    def self.update(application_names)
+      store = Ghost.store
+      store.all.each do |host|
+        # Delete old names we have previously added
+        if host.name.end_with(".#{DOMAIN_SUFFIX}")
+          store.delete(host)
+        end
+      end
+      application_names.each do |name|
+        store.add(
+          Ghost::Host.new("#{name}.#{DOMAIN_SUFFIX}", '127.0.0.1'))
+      end
 
-    hosts_file = File.read("/etc/hosts").split("\n").delete_if {|row| row =~ /.+(#brow)/}
-    hosts_file << "127.0.0.1\tlocalhost" if hosts_file.empty?
-    first_loopback_index = hosts_file.index {|i| i =~ /^(127.0.0.1).+/}
-    hosts_file = hosts_file.insert(first_loopback_index + 1, service_lines)
-    File.open("#{ENV['HOME']}/hosts-brow", "w")  do
-      |file| file.puts hosts_file.join("\n")
-    end
-    %x{cp #{hosts_file_path} #{ENV['HOME']}/hosts.bak}
-    %x{sudo mv #{ENV['HOME']}/hosts-brow #{hosts_file_path}}
-    if %x{uname} =~ /^Darwin/
-      %x{dscacheutil -flushcache}
-    else
-      if %x{which nscd} =~ /nscd/
-        %x{sudo service nscd restart}
+      if `which dscacheutil` != ''
+        system('dscacheutil -flushcache')
+      end
+
+      if `which nscd` != ''
+        system('sudo service nscd restart')
       end
     end
+
   end
 end
