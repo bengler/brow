@@ -1,7 +1,24 @@
 # Brow
 
-Brow automatically configures all you rack apps and pebbles to be served with unicorn through nginx. It 
+Brow automatically configures all you rack apps and pebbles to be served with unicorn through nginx. It
 takes care of mapping all your pebbles into the url-space of all your apps.
+
+## Custom built nginx
+
+```
+cd /usr/local/Library/Formula
+open nginx.rb
+```
+after the line with `--with-http_gzip_static_module`, add another parameter `--with-http_stub_status_module`
+
+Then:
+
+```
+cd ~/code/my-brow-source-code
+brew uninstall nginx
+brew install nginx --build-from-source
+```
+
 
 ## Requirements
 
@@ -41,7 +58,7 @@ To restart everything do
 
 If this fails:
 
-    brow restart --hard 
+    brow restart --hard
     brow restart checkpoint --hard
 
 To kill all services:
@@ -58,6 +75,5 @@ To tail all logs:
 
 ## Pebbles?!
 
-This is not the time nor place to describe the details of the pebbles spec, suffice it to say that each pebble is 
+This is not the time nor place to describe the details of the pebbles spec, suffice it to say that each pebble is
 proxied into the url space of every app at /api/[service-name]
-
