@@ -35,6 +35,10 @@ server {
 <%  end -%>
 <% end -%>
 
+  location ~* \.(eot|ttf|woff)$ {
+    add_header Access-Control-Allow-Origin *;
+  }
+
   location ~* \.(css|gif|ico|jpeg|jpg|js|png)$ {
 <% if proxy != "" -%>
     try_files $uri @proxy;
