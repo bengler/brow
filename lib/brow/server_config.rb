@@ -9,7 +9,7 @@ class Brow::ServerConfig
     @name = File.basename(pwd)
     @socket = self.class.socket_for_service(@name)
     @pidfile = "/tmp/brow-#{@name}.pid"
-    @workers = config['workers'] || 4
+    @workers = config['workers'] || 10
     @timeout = config['timeout'] || 300
   end
 
@@ -92,8 +92,8 @@ class Brow::ServerConfig
 
     name = @name
     memcached = nil
-    
-    template('site.rb.erb').result(binding) + template('site_addendum.rb.erb').result(binding)    
+
+    template('site.rb.erb').result(binding) + template('site_addendum.rb.erb').result(binding)
   end
 
   def save_site_config
