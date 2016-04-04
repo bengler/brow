@@ -3,22 +3,15 @@
 Brow automatically configures all you rack apps and pebbles to be served with unicorn through nginx. It
 takes care of mapping all your pebbles into the url-space of all your apps.
 
-## Custom built nginx
+## Necessary modules for nginx
+
+You need nginx compiled with `--with-http_gzip_static_module` and `--with-http_stub_status_module`
+
+With Homebrew on Mac OS X this can be achieved with:
 
 ```
-cd /usr/local/Library/Formula
-open nginx.rb
+brew install nginx-full --with-status --with-gzip-static
 ```
-after the line with `--with-http_gzip_static_module`, add another parameter `--with-http_stub_status_module`
-
-Then:
-
-```
-cd ~/code/my-brow-source-code
-brew uninstall nginx
-brew install nginx --build-from-source
-```
-
 
 ## Requirements
 
